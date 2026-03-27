@@ -8,6 +8,7 @@ import streamlit as st
 import pandas as pd
 import re
 from pathlib import Path
+from rapidfuzz import fuzz, process
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -367,18 +368,80 @@ def build_unified_db():
 
     result = pd.DataFrame(records)
 
+    # ── Fuzzy matching for CAS-only entries ──────────────────────────
+    # Build HS품명 lookup for fuzzy matching (품명 -> list of hs rows)
+    hs_product_names = {}
+    for _, hs_row in hs_df.iterrows():
+        pname = hs_row["품명"].strip()
+        if pname:
+            hs_product_names[pname] = hs_row
+
+    # Build list of HS 수입요령 English names for fuzzy matching
+    hs_eng_names = {}  # english name -> hs_row
+    for _, hs_row in hs_df.iterrows():
+        text = hs_row["수입요령"]
+        if not text:
+            continue
+        # Extract all English names from brackets
+        for bracket_text in bracket_pattern.findall(text):
+            parts = re.split(r";\s*", bracket_text)
+            for part in parts:
+                part = part.strip()
+                if part and not cas_num_pattern.match(part) and re.search(r"[a-zA-Z]", part):
+                    hs_eng_names[part.lower()] = hs_row
+
+    hs_eng_keys = list(hs_eng_names.keys())
+
     # Also include CAS-only entries (chemicals not in HS file)
-    # so users can search by CAS number and see regulation info
+    # Try fuzzy matching by English name to find related HS entries
     cas_only_records = []
     matched_cas_set = set(result["CAS번호"].dropna().unique())
+    fuzzy_matched = 0
+
     for _, cas_row in cas_df.iterrows():
         cas_num = cas_row["CAS번호"]
         if cas_num and cas_num not in matched_cas_set:
+            eng_name = cas_row["영문명"].strip()
+            hs_info = {"세번": "", "품명": "", "수입요령": "", "관련법령": ""}
+            is_matched = False
+
+            # Try fuzzy match with English names in HS data
+            if eng_name and hs_eng_keys:
+                eng_lower = eng_name.lower()
+                # First try exact substring match
+                for hs_eng, hs_row in hs_eng_names.items():
+                    if eng_lower == hs_eng or eng_lower in hs_eng or hs_eng in eng_lower:
+                        hs_info = {
+                            "세번": hs_row["세번"],
+                            "품명": hs_row["품명"],
+                            "수입요령": hs_row["수입요령"],
+                            "관련법령": hs_row["관련법령"],
+                        }
+                        is_matched = True
+                        fuzzy_matched += 1
+                        break
+
+                # If no substring match, try fuzzy matching (score >= 85)
+                if not is_matched:
+                    match = process.extractOne(
+                        eng_lower, hs_eng_keys,
+                        scorer=fuzz.token_sort_ratio,
+                        score_cutoff=85,
+                    )
+                    if match:
+                        best_name, score, _ = match
+                        hs_row = hs_eng_names[best_name]
+                        hs_info = {
+                            "세번": hs_row["세번"],
+                            "품명": hs_row["품명"],
+                            "수입요령": hs_row["수입요령"],
+                            "관련법령": hs_row["관련법령"],
+                        }
+                        is_matched = True
+                        fuzzy_matched += 1
+
             cas_only_records.append({
-                "세번": "",
-                "품명": "",
-                "수입요령": "",
-                "관련법령": "",
+                **hs_info,
                 "CAS번호": cas_num,
                 "영문명": cas_row["영문명"],
                 "국문명": cas_row["국문명"],
@@ -389,7 +452,7 @@ def build_unified_db():
                 "잔류": cas_row["잔류"],
                 "유해특성분류": cas_row["유해특성분류 및 혼합물 함량기준(%)"],
                 "기존물질여부": cas_row["기존물질여부"],
-                "_matched": False,
+                "_matched": is_matched,
             })
 
     cas_only_df = pd.DataFrame(cas_only_records)
