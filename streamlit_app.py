@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Chemical Part Solution - 화학물질 수입요령 검색 시스템
+화학물질 관리시스템 - Chemical Substance Management System
 Star Truck Korea
 """
 
@@ -14,178 +14,260 @@ from rapidfuzz import fuzz, process
 # Page config
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="화학물질 수입요령 검색",
-    page_icon="🧪",
+    page_title="화학물질 관리시스템",
+    page_icon="⚗️",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # ---------------------------------------------------------------------------
-# Global CSS - Mercedes-Benz Star Truck Korea branding
+# CSS - PPT 디자인 기반 (#002060 네이비, 맑은 고딕 스타일)
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
-/* Remove Streamlit default top padding */
-.block-container {
-    padding-top: 0rem !important;
-}
-header[data-testid="stHeader"] {
-    background: transparent !important;
-    height: 2.5rem !important;
-}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap');
+
+/* Global */
+* { font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif !important; }
+.block-container { padding-top: 0rem !important; padding-bottom: 1rem !important; }
+header[data-testid="stHeader"] { background: transparent !important; height: 2rem !important; }
 
 /* Page background */
-.stApp {
-    background-color: #f0f2f5;
-}
+.stApp { background-color: #f4f6f9; }
 
-/* Header bar */
-.header-bar {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    padding: 1.2rem 2rem;
-    border-radius: 0 0 16px 16px;
-    margin: -1rem -1rem 1.5rem -1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+/* ── Sidebar ── */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #001845 0%, #002060 40%, #003080 100%);
+    min-width: 220px !important;
+    max-width: 220px !important;
 }
-.header-bar h1 {
-    color: #ffffff;
-    font-size: 1.6rem;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: 0.5px;
+section[data-testid="stSidebar"] * { color: #ffffff !important; }
+section[data-testid="stSidebar"] .stRadio label {
+    padding: 0.4rem 0.8rem !important;
+    border-radius: 6px !important;
+    transition: background 0.2s;
 }
-.header-bar .subtitle {
-    color: #8ebbff;
-    font-size: 0.9rem;
-    margin: 0;
+section[data-testid="stSidebar"] .stRadio label:hover {
+    background: rgba(255,255,255,0.1) !important;
 }
-.header-logo {
-    font-size: 2.2rem;
-    margin-right: 0.5rem;
+section[data-testid="stSidebar"] .stRadio [data-testid="stMarkdownContainer"] p {
+    font-size: 0.9rem !important;
 }
+section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !important; }
 
-/* Section cards */
-.section-card {
-    background: #ffffff;
+/* ── Top Header Bar ── */
+.top-header {
+    background: linear-gradient(135deg, #001845 0%, #002060 60%, #003894 100%);
+    padding: 1rem 2rem;
+    border-radius: 0 0 12px 12px;
+    margin: -1rem -1rem 1.2rem -1rem;
+    display: flex; align-items: center; gap: 1rem;
+    box-shadow: 0 2px 12px rgba(0,32,96,0.25);
+}
+.top-header h1 { color: #fff; font-size: 1.4rem; font-weight: 700; margin: 0; letter-spacing: 0.3px; }
+.top-header .sub { color: #8cb4ff; font-size: 0.8rem; margin: 0; }
+.top-header .logo { font-size: 1.8rem; }
+
+/* ── Filter Section ── */
+.filter-section {
+    background: #fff;
+    border: 1px solid #dde3ea;
     border-radius: 10px;
-    padding: 1.5rem 2rem;
+    padding: 1rem 1.5rem;
     margin-bottom: 1rem;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-    border: 1px solid #e0e4e8;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.filter-label {
+    color: #002060;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
 }
 
-/* Search box styling */
-[data-testid="stTextInput"] > div > div > input {
-    font-size: 1.1rem !important;
-    padding: 0.7rem 1rem !important;
-    border-radius: 10px !important;
-    border: 2px solid #0f3460 !important;
+/* ── Stats Row ── */
+.stats-row { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.stat-box {
+    flex: 1;
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    text-align: center;
+    border: 1px solid #dde3ea;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
-[data-testid="stTextInput"] > div > div > input:focus {
-    border-color: #00adef !important;
-    box-shadow: 0 0 0 3px rgba(0,173,239,0.15) !important;
+.stat-box .num { font-size: 1.5rem; font-weight: 800; color: #002060; margin: 0; }
+.stat-box .lbl { font-size: 0.75rem; color: #5a6a7a; margin: 0; }
+
+/* ── Count badge ── */
+.count-badge {
+    display: inline-block;
+    color: #002060;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.count-badge b { font-size: 1rem; }
+
+/* ── Page Title ── */
+.page-title {
+    color: #002060;
+    font-size: 1.15rem;
+    font-weight: 700;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #002060;
+    margin-bottom: 1rem;
 }
 
-/* Result card */
-.result-card {
-    background: #ffffff;
+/* ── Detail Card ── */
+.detail-card {
+    background: #fff;
+    border: 1px solid #dde3ea;
     border-radius: 10px;
     padding: 1.2rem 1.5rem;
     margin-bottom: 0.8rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    border-left: 4px solid #0f3460;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
+.detail-section-title {
+    color: #002060;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 0.4rem 0;
+    border-bottom: 1.5px solid #002060;
+    margin-bottom: 0.6rem;
+}
+.detail-row {
+    display: flex;
+    border-bottom: 1px solid #f0f2f5;
+    padding: 0.35rem 0;
+    font-size: 0.85rem;
+}
+.detail-label {
+    width: 140px;
+    min-width: 140px;
+    color: #002060;
+    font-weight: 600;
+}
+.detail-value { color: #333; flex: 1; }
 
-/* Law highlight */
+/* ── Law / Regulation Tags ── */
 .law-badge {
     display: inline-block;
-    background: #e74c3c;
+    background: #002060;
     color: #fff;
-    padding: 0.25rem 0.7rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 0.15rem 0.15rem;
-}
-.law-badge-blue {
-    background: #0f3460;
-}
-
-/* Regulation tags */
-.reg-tag {
-    display: inline-block;
     padding: 0.2rem 0.6rem;
     border-radius: 5px;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin: 0.1rem;
+}
+.law-badge-red { background: #c0392b; }
+.law-badge-orange { background: #e67e22; }
+
+.reg-tag {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
     font-weight: 600;
     margin: 0.1rem;
 }
 .reg-tag-red { background: #fde8e8; color: #c0392b; border: 1px solid #e74c3c; }
-.reg-tag-orange { background: #fef3e2; color: #e67e22; border: 1px solid #f0ad4e; }
+.reg-tag-orange { background: #fef3e2; color: #d35400; border: 1px solid #f0ad4e; }
 .reg-tag-yellow { background: #fef9e7; color: #b7950b; border: 1px solid #f1c40f; }
-.reg-tag-green { background: #eafaf1; color: #1e8449; border: 1px solid #2ecc71; }
+.reg-tag-green { background: #eafaf1; color: #1e8449; border: 1px solid #27ae60; }
 .reg-tag-blue { background: #eaf2f8; color: #1a5276; border: 1px solid #3498db; }
 .reg-tag-purple { background: #f4ecf7; color: #6c3483; border: 1px solid #9b59b6; }
 
-/* Stats cards */
-.stat-card {
-    background: #ffffff;
-    border-radius: 10px;
-    padding: 1rem 1.2rem;
-    text-align: center;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    border: 1px solid #e0e4e8;
-}
-.stat-number {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: #0f3460;
-    margin: 0;
-}
-.stat-label {
-    font-size: 0.85rem;
-    color: #666;
-    margin: 0;
+/* ── Import Req Box ── */
+.import-req-box {
+    background: #f8f9fb;
+    border: 1px solid #dde3ea;
+    border-radius: 8px;
+    padding: 0.8rem;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    max-height: 250px;
+    overflow-y: auto;
+    color: #333;
 }
 
-/* Dataframe styling */
+/* ── Table Header ── */
 [data-testid="stDataFrame"] div[role="columnheader"],
 [data-testid="stDataFrame"] div[role="columnheader"] *,
 [data-testid="stDataFrame"] th {
-    color: #000000 !important;
-    opacity: 1 !important;
-    font-weight: 800 !important;
+    background: #002060 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
 }
 
-/* Info text in import requirements */
-.import-req-box {
-    background: #f8f9fa;
-    border: 1px solid #e0e4e8;
-    border-radius: 8px;
-    padding: 1rem;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    max-height: 300px;
-    overflow-y: auto;
+/* ── Substance Tables ── */
+.substance-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+}
+.substance-table th {
+    background: #002060;
+    color: #fff;
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+.substance-table td {
+    padding: 0.35rem 0.6rem;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+.substance-table tr:hover td { background: #f0f4ff; }
+
+/* ── Search Box ── */
+[data-testid="stTextInput"] > div > div > input {
+    font-size: 0.95rem !important;
+    padding: 0.6rem 1rem !important;
+    border-radius: 8px !important;
+    border: 2px solid #002060 !important;
+}
+[data-testid="stTextInput"] > div > div > input:focus {
+    border-color: #0066cc !important;
+    box-shadow: 0 0 0 3px rgba(0,102,204,0.12) !important;
+}
+
+/* ── Buttons ── */
+.stButton > button {
+    background: #002060 !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+}
+.stButton > button:hover {
+    background: #003894 !important;
+}
+
+/* ── Sidebar menu selected ── */
+section[data-testid="stSidebar"] [data-testid="stRadio"] label[data-checked="true"] {
+    background: rgba(255,255,255,0.15) !important;
+    border-radius: 6px;
 }
 </style>
 """, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------
-# Data loading and processing
+# Data loading (unchanged logic)
 # ---------------------------------------------------------------------------
 DATA_DIR = Path(__file__).parent
-
 CAS_FILE = "화학물질_20260325(CAS no).xlsx"
 HS_FILE = "(수정) [별표2] 수입요령.xlsx"
 
 
 @st.cache_data(show_spinner="데이터 로딩 중...")
 def load_cas_data():
-    """Load the CAS number reference file (47K+ chemicals)."""
     fp = DATA_DIR / CAS_FILE
     df = pd.read_excel(fp, dtype=str)
     df.columns = [
@@ -194,7 +276,6 @@ def load_cas_data():
         "중점", "잔류", "유해특성분류 및 혼합물 함량기준(%)",
         "등록대상기존화학물질", "기존물질여부",
     ]
-    # Clean up CAS numbers
     df["CAS번호"] = df["CAS번호"].fillna("").str.strip()
     df["영문명"] = df["영문명"].fillna("").str.strip()
     df["국문명"] = df["국문명"].fillna("").str.strip()
@@ -203,10 +284,8 @@ def load_cas_data():
 
 @st.cache_data(show_spinner="수입요령 데이터 처리 중...")
 def load_hs_data():
-    """Load the HS code / import requirements file."""
     fp = DATA_DIR / HS_FILE
     df = pd.read_excel(fp, dtype=str)
-    # Rename columns by position for reliability
     col_map = {
         df.columns[0]: "구분",
         df.columns[5]: "세번",
@@ -224,50 +303,37 @@ def load_hs_data():
 
 @st.cache_data(show_spinner="CAS 번호 매칭 및 데이터베이스 구축 중...")
 def build_unified_db():
-    """
-    Extract CAS numbers from 수입요령 text, match with CAS reference file,
-    and build a unified searchable database.
-    """
     cas_df = load_cas_data()
     hs_df = load_hs_data()
 
-    # Build CAS lookup dictionary: CAS번호 -> row index
     cas_lookup = {}
     for idx, row in cas_df.iterrows():
         cas_num = row["CAS번호"]
         if cas_num:
-            # Handle multiple CAS numbers (comma / semicolon separated)
             for cn in re.split(r"[,;/]\s*", cas_num):
                 cn = cn.strip()
                 if cn:
                     cas_lookup[cn] = idx
 
-    # Build English name lookup (lowercase -> row index)
     eng_lookup = {}
     for idx, row in cas_df.iterrows():
         eng = row["영문명"].lower().strip()
         if eng:
             eng_lookup[eng] = idx
 
-    # Pattern to extract [EnglishName; CAS-number] from 수입요령
     bracket_pattern = re.compile(r"\[([^\]]+)\]")
     cas_num_pattern = re.compile(r"\b(\d{2,7}-\d{2}-\d)\b")
-
     records = []
 
     for _, hs_row in hs_df.iterrows():
         text = hs_row["수입요령"]
         if not text:
             continue
-
-        # Find all bracketed sections that contain CAS-like numbers
         brackets = bracket_pattern.findall(text)
-
         extracted_items = []
         for bracket_text in brackets:
             cas_matches = cas_num_pattern.findall(bracket_text)
             if cas_matches:
-                # Extract English name: everything before the first semicolon or CAS number
                 parts = re.split(r";\s*", bracket_text)
                 eng_name = ""
                 cas_nums = []
@@ -277,112 +343,70 @@ def build_unified_db():
                         cas_nums.append(part)
                     elif not eng_name:
                         eng_name = part
-
                 for cn in cas_nums:
                     extracted_items.append((eng_name, cn))
 
         if not extracted_items:
-            # No CAS numbers found in brackets - still include the HS row
-            # as a standalone entry (for HS code / product name search)
             records.append({
-                "세번": hs_row["세번"],
-                "품명": hs_row["품명"],
-                "수입요령": text,
-                "관련법령": hs_row["관련법령"],
-                "CAS번호": "",
-                "영문명": "",
-                "국문명": "",
-                "급성/만성/생태": "",
-                "사고대비": "",
-                "제한/금지/허가": "",
-                "중점": "",
-                "잔류": "",
-                "유해특성분류": "",
-                "기존물질여부": "",
+                "세번": hs_row["세번"], "품명": hs_row["품명"],
+                "수입요령": text, "관련법령": hs_row["관련법령"],
+                "CAS번호": "", "영문명": "", "국문명": "",
+                "급성/만성/생태": "", "사고대비": "", "제한/금지/허가": "",
+                "중점": "", "잔류": "", "유해특성분류": "", "기존물질여부": "",
                 "_matched": False,
             })
             continue
 
-        # For each extracted CAS, try to match with the CAS reference
         for eng_name, cas_num in extracted_items:
             cas_info = {}
             matched = False
-
-            # Primary: exact CAS match
             if cas_num in cas_lookup:
-                cas_row = cas_df.iloc[cas_lookup[cas_num]]
+                cr = cas_df.iloc[cas_lookup[cas_num]]
                 cas_info = {
                     "CAS번호": cas_num,
-                    "영문명": cas_row["영문명"] if cas_row["영문명"] else eng_name,
-                    "국문명": cas_row["국문명"],
-                    "급성/만성/생태": cas_row["급성/만성/생태"],
-                    "사고대비": cas_row["사고대비"],
-                    "제한/금지/허가": cas_row["제한/금지/허가"],
-                    "중점": cas_row["중점"],
-                    "잔류": cas_row["잔류"],
-                    "유해특성분류": cas_row["유해특성분류 및 혼합물 함량기준(%)"],
-                    "기존물질여부": cas_row["기존물질여부"],
+                    "영문명": cr["영문명"] if cr["영문명"] else eng_name,
+                    "국문명": cr["국문명"],
+                    "급성/만성/생태": cr["급성/만성/생태"],
+                    "사고대비": cr["사고대비"],
+                    "제한/금지/허가": cr["제한/금지/허가"],
+                    "중점": cr["중점"], "잔류": cr["잔류"],
+                    "유해특성분류": cr["유해특성분류 및 혼합물 함량기준(%)"],
+                    "기존물질여부": cr["기존물질여부"],
                 }
                 matched = True
             else:
-                # Fallback: English name fuzzy match
                 eng_lower = eng_name.lower().strip()
                 if eng_lower and eng_lower in eng_lookup:
-                    cas_row = cas_df.iloc[eng_lookup[eng_lower]]
+                    cr = cas_df.iloc[eng_lookup[eng_lower]]
                     cas_info = {
-                        "CAS번호": cas_num,
-                        "영문명": cas_row["영문명"],
-                        "국문명": cas_row["국문명"],
-                        "급성/만성/생태": cas_row["급성/만성/생태"],
-                        "사고대비": cas_row["사고대비"],
-                        "제한/금지/허가": cas_row["제한/금지/허가"],
-                        "중점": cas_row["중점"],
-                        "잔류": cas_row["잔류"],
-                        "유해특성분류": cas_row["유해특성분류 및 혼합물 함량기준(%)"],
-                        "기존물질여부": cas_row["기존물질여부"],
+                        "CAS번호": cas_num, "영문명": cr["영문명"], "국문명": cr["국문명"],
+                        "급성/만성/생태": cr["급성/만성/생태"], "사고대비": cr["사고대비"],
+                        "제한/금지/허가": cr["제한/금지/허가"], "중점": cr["중점"],
+                        "잔류": cr["잔류"],
+                        "유해특성분류": cr["유해특성분류 및 혼합물 함량기준(%)"],
+                        "기존물질여부": cr["기존물질여부"],
                     }
                     matched = True
-
             if not matched:
                 cas_info = {
-                    "CAS번호": cas_num,
-                    "영문명": eng_name,
-                    "국문명": "",
-                    "급성/만성/생태": "",
-                    "사고대비": "",
-                    "제한/금지/허가": "",
-                    "중점": "",
-                    "잔류": "",
-                    "유해특성분류": "",
-                    "기존물질여부": "",
+                    "CAS번호": cas_num, "영문명": eng_name, "국문명": "",
+                    "급성/만성/생태": "", "사고대비": "", "제한/금지/허가": "",
+                    "중점": "", "잔류": "", "유해특성분류": "", "기존물질여부": "",
                 }
-
             records.append({
-                "세번": hs_row["세번"],
-                "품명": hs_row["품명"],
-                "수입요령": text,
-                "관련법령": hs_row["관련법령"],
-                **cas_info,
-                "_matched": matched,
+                "세번": hs_row["세번"], "품명": hs_row["품명"],
+                "수입요령": text, "관련법령": hs_row["관련법령"],
+                **cas_info, "_matched": matched,
             })
 
     result = pd.DataFrame(records)
 
-    # ── Fuzzy matching for CAS-only entries ──────────────────────────
-    # Build HS품명 lookup for fuzzy matching (품명 -> list of hs rows)
-    hs_product_names = {}
-    for _, hs_row in hs_df.iterrows():
-        pname = hs_row["품명"].strip()
-        if pname:
-            hs_product_names[pname] = hs_row
-
-    # Build list of HS 수입요령 English names for fuzzy matching
-    hs_eng_names = {}  # english name -> hs_row
+    # Fuzzy matching for CAS-only entries
+    hs_eng_names = {}
     for _, hs_row in hs_df.iterrows():
         text = hs_row["수입요령"]
         if not text:
             continue
-        # Extract all English names from brackets
         for bracket_text in bracket_pattern.findall(text):
             parts = re.split(r";\s*", bracket_text)
             for part in parts:
@@ -391,12 +415,8 @@ def build_unified_db():
                     hs_eng_names[part.lower()] = hs_row
 
     hs_eng_keys = list(hs_eng_names.keys())
-
-    # Also include CAS-only entries (chemicals not in HS file)
-    # Try fuzzy matching by English name to find related HS entries
     cas_only_records = []
     matched_cas_set = set(result["CAS번호"].dropna().unique())
-    fuzzy_matched = 0
 
     for _, cas_row in cas_df.iterrows():
         cas_num = cas_row["CAS번호"]
@@ -405,328 +425,364 @@ def build_unified_db():
             hs_info = {"세번": "", "품명": "", "수입요령": "", "관련법령": ""}
             is_matched = False
 
-            # Try fuzzy match with English names in HS data
             if eng_name and hs_eng_keys:
                 eng_lower = eng_name.lower()
-                # First try exact substring match
                 for hs_eng, hs_row in hs_eng_names.items():
                     if eng_lower == hs_eng or eng_lower in hs_eng or hs_eng in eng_lower:
-                        hs_info = {
-                            "세번": hs_row["세번"],
-                            "품명": hs_row["품명"],
-                            "수입요령": hs_row["수입요령"],
-                            "관련법령": hs_row["관련법령"],
-                        }
+                        hs_info = {"세번": hs_row["세번"], "품명": hs_row["품명"],
+                                   "수입요령": hs_row["수입요령"], "관련법령": hs_row["관련법령"]}
                         is_matched = True
-                        fuzzy_matched += 1
                         break
-
-                # If no substring match, try fuzzy matching (score >= 85)
                 if not is_matched:
-                    match = process.extractOne(
-                        eng_lower, hs_eng_keys,
-                        scorer=fuzz.token_sort_ratio,
-                        score_cutoff=85,
-                    )
+                    match = process.extractOne(eng_lower, hs_eng_keys,
+                                               scorer=fuzz.token_sort_ratio, score_cutoff=85)
                     if match:
-                        best_name, score, _ = match
-                        hs_row = hs_eng_names[best_name]
-                        hs_info = {
-                            "세번": hs_row["세번"],
-                            "품명": hs_row["품명"],
-                            "수입요령": hs_row["수입요령"],
-                            "관련법령": hs_row["관련법령"],
-                        }
+                        hs_row = hs_eng_names[match[0]]
+                        hs_info = {"세번": hs_row["세번"], "품명": hs_row["품명"],
+                                   "수입요령": hs_row["수입요령"], "관련법령": hs_row["관련법령"]}
                         is_matched = True
-                        fuzzy_matched += 1
 
             cas_only_records.append({
                 **hs_info,
-                "CAS번호": cas_num,
-                "영문명": cas_row["영문명"],
-                "국문명": cas_row["국문명"],
-                "급성/만성/생태": cas_row["급성/만성/생태"],
-                "사고대비": cas_row["사고대비"],
-                "제한/금지/허가": cas_row["제한/금지/허가"],
-                "중점": cas_row["중점"],
+                "CAS번호": cas_num, "영문명": cas_row["영문명"], "국문명": cas_row["국문명"],
+                "급성/만성/생태": cas_row["급성/만성/생태"], "사고대비": cas_row["사고대비"],
+                "제한/금지/허가": cas_row["제한/금지/허가"], "중점": cas_row["중점"],
                 "잔류": cas_row["잔류"],
                 "유해특성분류": cas_row["유해특성분류 및 혼합물 함량기준(%)"],
-                "기존물질여부": cas_row["기존물질여부"],
-                "_matched": is_matched,
+                "기존물질여부": cas_row["기존물질여부"], "_matched": is_matched,
             })
 
     cas_only_df = pd.DataFrame(cas_only_records)
     result = pd.concat([result, cas_only_df], ignore_index=True)
-
-    # Fill NaN with empty string for consistent searching
     result = result.fillna("")
-
     return result
 
 
-def search_database(df: pd.DataFrame, query: str) -> pd.DataFrame:
-    """Search across multiple columns with case-insensitive partial matching."""
+def search_database(df, query):
     if not query or not query.strip():
         return pd.DataFrame()
-
     query = query.strip().lower()
-    # Split multi-word queries for AND-matching
     terms = query.split()
-
-    mask = pd.Series([True] * len(df), index=df.index)
-
-    # Build a combined searchable text column for efficiency
     search_cols = ["품명", "영문명", "국문명", "CAS번호", "세번", "관련법령"]
-    combined = df[search_cols].apply(
-        lambda row: " ".join(str(v).lower() for v in row), axis=1
-    )
-
+    combined = df[search_cols].apply(lambda row: " ".join(str(v).lower() for v in row), axis=1)
+    mask = pd.Series([True] * len(df), index=df.index)
     for term in terms:
         mask &= combined.str.contains(re.escape(term), case=False, na=False)
-
     return df[mask]
 
 
-def render_regulation_tags(row):
-    """Generate HTML for regulation status tags."""
-    tags = []
-    if row.get("급성/만성/생태") and str(row["급성/만성/생태"]).strip():
-        tags.append(f'<span class="reg-tag reg-tag-red">급성/만성/생태: {row["급성/만성/생태"]}</span>')
-    if row.get("사고대비") and str(row["사고대비"]).strip():
-        tags.append(f'<span class="reg-tag reg-tag-orange">사고대비: {row["사고대비"]}</span>')
-    if row.get("제한/금지/허가") and str(row["제한/금지/허가"]).strip():
-        tags.append(f'<span class="reg-tag reg-tag-red">제한/금지/허가: {row["제한/금지/허가"]}</span>')
-    if row.get("중점") and str(row["중점"]).strip():
-        tags.append(f'<span class="reg-tag reg-tag-purple">중점관리: {row["중점"]}</span>')
-    if row.get("잔류") and str(row["잔류"]).strip():
-        tags.append(f'<span class="reg-tag reg-tag-yellow">잔류: {row["잔류"]}</span>')
-    if row.get("기존물질여부") and str(row["기존물질여부"]).strip():
-        tags.append(f'<span class="reg-tag reg-tag-green">기존물질: {row["기존물질여부"]}</span>')
-    return " ".join(tags)
-
-
-def render_law_badges(law_text):
-    """Generate HTML for related law badges."""
-    if not law_text or not str(law_text).strip():
-        return ""
-    # Split by common delimiters
-    laws = re.split(r"[,\n/]", str(law_text))
-    badges = []
-    for law in laws:
-        law = law.strip()
-        if law:
-            badges.append(f'<span class="law-badge">{law}</span>')
-    return " ".join(badges)
-
-
 # ---------------------------------------------------------------------------
-# Main app
+# Sidebar
 # ---------------------------------------------------------------------------
-def main():
-    # ── Header ────────────────────────────────────────────────────────────
+with st.sidebar:
     st.markdown("""
-    <div class="header-bar">
-        <span class="header-logo">&#9883;</span>
-        <div>
-            <h1>화학물질 수입요령 검색 시스템</h1>
-            <p class="subtitle">Chemical Import Requirements Search &mdash; Star Truck Korea</p>
-        </div>
+    <div style="text-align:center; padding: 1rem 0 0.5rem 0;">
+        <div style="font-size:1.8rem;">⚗️</div>
+        <div style="font-size:1rem; font-weight:700; letter-spacing:0.5px;">화학물질 관리시스템</div>
+        <div style="font-size:0.65rem; color:#8cb4ff; margin-top:0.2rem;">Chemical Substance Management</div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("---")
+
+    menu = st.radio(
+        "메뉴",
+        ["제품목록", "법령관리", "화학물질 조회"],
+        label_visibility="collapsed",
+    )
+    st.markdown("---")
+    st.caption("Star Truck Korea")
+
+
+# ---------------------------------------------------------------------------
+# Header
+# ---------------------------------------------------------------------------
+st.markdown("""
+<div class="top-header">
+    <span class="logo">&#9883;</span>
+    <div>
+        <h1>화학물질 관리시스템</h1>
+        <p class="sub">Chemical Substance Management System — Star Truck Korea</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------------------
+# Load data
+# ---------------------------------------------------------------------------
+try:
+    db = build_unified_db()
+except Exception as e:
+    st.error(f"데이터 로딩 오류: {e}")
+    st.stop()
+
+total_chemicals = db[db["CAS번호"] != ""].shape[0]
+total_hs = db[db["세번"] != ""]["세번"].nunique()
+matched_count = db[db["_matched"]].shape[0]
+
+
+# ===========================================================================
+# PAGE: 제품목록
+# ===========================================================================
+if menu == "제품목록":
+    st.markdown('<div class="page-title">제품목록</div>', unsafe_allow_html=True)
+
+    # Stats
+    st.markdown(f"""
+    <div class="stats-row">
+        <div class="stat-box"><p class="num">{len(db):,}</p><p class="lbl">전체 레코드</p></div>
+        <div class="stat-box"><p class="num">{total_chemicals:,}</p><p class="lbl">화학물질 (CAS)</p></div>
+        <div class="stat-box"><p class="num">{total_hs:,}</p><p class="lbl">HS 코드</p></div>
+        <div class="stat-box"><p class="num">{matched_count:,}</p><p class="lbl">CAS-HS 매칭</p></div>
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Load data ─────────────────────────────────────────────────────────
-    try:
-        db = build_unified_db()
-    except Exception as e:
-        st.error(f"데이터 로딩 중 오류가 발생했습니다: {e}")
-        st.stop()
-
-    # ── Statistics ─────────────────────────────────────────────────────────
-    total_chemicals = db[db["CAS번호"] != ""].shape[0]
-    total_hs = db[db["세번"] != ""]["세번"].nunique()
-    matched_count = db[db["_matched"]].shape[0]
-
-    cols = st.columns(4)
-    with cols[0]:
-        st.markdown(f"""
-        <div class="stat-card">
-            <p class="stat-number">{len(db):,}</p>
-            <p class="stat-label">전체 레코드</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with cols[1]:
-        st.markdown(f"""
-        <div class="stat-card">
-            <p class="stat-number">{total_chemicals:,}</p>
-            <p class="stat-label">화학물질 (CAS)</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with cols[2]:
-        st.markdown(f"""
-        <div class="stat-card">
-            <p class="stat-number">{total_hs:,}</p>
-            <p class="stat-label">HS 코드</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with cols[3]:
-        st.markdown(f"""
-        <div class="stat-card">
-            <p class="stat-number">{matched_count:,}</p>
-            <p class="stat-label">CAS-HS 매칭</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # ── Search ────────────────────────────────────────────────────────────
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    query = st.text_input(
-        "검색어를 입력하세요",
-        placeholder="품명, 영문명, 국문명, CAS 번호, HS 코드 검색...",
-        label_visibility="collapsed",
-        key="search_input",
-    )
-
-    # Search mode options
-    col_a, col_b = st.columns([3, 1])
-    with col_b:
-        search_scope = st.selectbox(
-            "검색 범위",
-            ["전체 (통합 DB)", "수입요령 있는 항목만", "CAS 화학물질만"],
-            index=0,
-            label_visibility="collapsed",
-        )
+    # Filter section
+    st.markdown('<div class="filter-section">', unsafe_allow_html=True)
+    fc1, fc2, fc3, fc4 = st.columns([3, 2, 2, 1])
+    with fc1:
+        query = st.text_input("검색", placeholder="제품명 / 영문명 / CAS No. / HSK No.", label_visibility="collapsed")
+    with fc2:
+        scope = st.selectbox("범위", ["전체", "수입요령 있는 항목", "CAS 화학물질"], label_visibility="collapsed")
+    with fc3:
+        law_filter = st.selectbox("관련법령", ["전체"] + sorted(db[db["관련법령"] != ""]["관련법령"].unique().tolist()), label_visibility="collapsed")
+    with fc4:
+        st.button("검색", use_container_width=True, key="search_btn")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if not query:
-        st.info("검색어를 입력하면 화학물질 정보와 수입요령을 조회할 수 있습니다.")
-        st.markdown("---")
+    # Apply filters
+    filtered = db.copy()
+    if scope == "수입요령 있는 항목":
+        filtered = filtered[filtered["수입요령"] != ""]
+    elif scope == "CAS 화학물질":
+        filtered = filtered[filtered["CAS번호"] != ""]
+    if law_filter != "전체":
+        filtered = filtered[filtered["관련법령"].str.contains(re.escape(law_filter), case=False, na=False)]
+
+    if query:
+        filtered = search_database(filtered, query)
+
+    if query or law_filter != "전체":
+        st.markdown(f'<div class="count-badge">총 <b>{len(filtered):,}</b> 건</div>', unsafe_allow_html=True)
+
+        if filtered.empty:
+            st.warning("검색 결과가 없습니다.")
+        else:
+            MAX_DISPLAY = 300
+            show = filtered.head(MAX_DISPLAY) if len(filtered) > MAX_DISPLAY else filtered
+            if len(filtered) > MAX_DISPLAY:
+                st.info(f"상위 {MAX_DISPLAY}건만 표시합니다.")
+
+            display_cols = ["CAS번호", "영문명", "국문명", "세번", "품명", "관련법령"]
+            st.dataframe(
+                show[display_cols].reset_index(drop=True),
+                use_container_width=True,
+                height=min(450, 35 * len(show) + 38),
+            )
+
+            # Detail view on select
+            st.markdown("---")
+            st.markdown('<div class="page-title">제품상세</div>', unsafe_allow_html=True)
+
+            CARDS_PER_PAGE = 15
+            total_pages = max(1, (len(show) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE)
+            page = 1
+            if total_pages > 1:
+                page = st.number_input("페이지", 1, total_pages, 1, key="prod_page")
+                st.caption(f"페이지 {page}/{total_pages}")
+
+            start = (page - 1) * CARDS_PER_PAGE
+            end = min(start + CARDS_PER_PAGE, len(show))
+
+            for _, row in show.iloc[start:end].iterrows():
+                cas = row.get("CAS번호", "")
+                eng = row.get("영문명", "")
+                kor = row.get("국문명", "")
+                hs = row.get("세번", "")
+                product = row.get("품명", "")
+                law = row.get("관련법령", "")
+                import_req = row.get("수입요령", "")
+
+                title_parts = []
+                if cas: title_parts.append(f"[{cas}]")
+                if eng: title_parts.append(eng)
+                if kor: title_parts.append(f"({kor})")
+                if not title_parts and product: title_parts.append(product)
+                title = " ".join(title_parts) or "항목"
+
+                with st.expander(title, expanded=(len(show.iloc[start:end]) <= 3)):
+                    # ── 기본정보 ──
+                    st.markdown('<div class="detail-section-title">기본정보</div>', unsafe_allow_html=True)
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.markdown(f"""
+                        <div class="detail-row"><div class="detail-label">제품명</div><div class="detail-value">{product or '-'}</div></div>
+                        <div class="detail-row"><div class="detail-label">영문 제품명</div><div class="detail-value">{eng or '-'}</div></div>
+                        <div class="detail-row"><div class="detail-label">국문명</div><div class="detail-value">{kor or '-'}</div></div>
+                        """, unsafe_allow_html=True)
+                    with c2:
+                        st.markdown(f"""
+                        <div class="detail-row"><div class="detail-label">CAS No.</div><div class="detail-value">{cas or '-'}</div></div>
+                        <div class="detail-row"><div class="detail-label">HSK No.</div><div class="detail-value">{hs or '-'}</div></div>
+                        <div class="detail-row"><div class="detail-label">기존물질여부</div><div class="detail-value">{row.get('기존물질여부', '') or '-'}</div></div>
+                        """, unsafe_allow_html=True)
+
+                    # ── 관련법령 ──
+                    if law:
+                        st.markdown('<div class="detail-section-title">관련법령</div>', unsafe_allow_html=True)
+                        laws = re.split(r"[,\n]", str(law))
+                        badges = " ".join(f'<span class="law-badge">{l.strip()}</span>' for l in laws if l.strip())
+                        st.markdown(badges, unsafe_allow_html=True)
+
+                    # ── 규제물질 정보 ──
+                    has_reg = any(str(row.get(k, "")).strip() for k in
+                                 ["급성/만성/생태", "사고대비", "제한/금지/허가", "중점", "잔류", "유해특성분류"])
+                    if has_reg:
+                        st.markdown('<div class="detail-section-title">규제물질 정보</div>', unsafe_allow_html=True)
+                        rows_html = ""
+                        reg_items = [
+                            ("급성/만성/생태", "reg-tag-red"),
+                            ("사고대비", "reg-tag-orange"),
+                            ("제한/금지/허가", "reg-tag-red"),
+                            ("중점", "reg-tag-purple"),
+                            ("잔류", "reg-tag-yellow"),
+                        ]
+                        for field, cls in reg_items:
+                            val = str(row.get(field, "")).strip()
+                            if val:
+                                rows_html += f'<tr><td><span class="reg-tag {cls}">{field}</span></td><td>{val}</td></tr>'
+                        hazard = str(row.get("유해특성분류", "")).strip()
+                        if hazard:
+                            rows_html += f'<tr><td><span class="reg-tag reg-tag-blue">유해특성분류</span></td><td>{hazard}</td></tr>'
+                        if rows_html:
+                            st.markdown(f'<table class="substance-table"><thead><tr><th>구분</th><th>내용</th></tr></thead><tbody>{rows_html}</tbody></table>', unsafe_allow_html=True)
+
+                    # ── 수입요령 ──
+                    if import_req:
+                        st.markdown('<div class="detail-section-title">수입요령</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="import-req-box">{import_req}</div>', unsafe_allow_html=True)
+    else:
+        # No search yet - show guide
         st.markdown("""
-        **검색 예시:**
-        - CAS 번호: `64-19-7` (아세트산)
-        - 영문명: `Nicotine`, `Acetic acid`
-        - 국문명: `니코틴`, `아세트산`
-        - HS 코드: `2209`, `2804`
-        - 품명: `식초`, `질소`
-        """)
-        return
+        <div class="detail-card" style="text-align:center; padding:2rem;">
+            <p style="color:#5a6a7a; font-size:0.95rem;">검색어를 입력하거나 법령 필터를 선택하면 결과가 표시됩니다.</p>
+            <div style="margin-top:1rem; color:#999; font-size:0.85rem;">
+                <b>검색 예시:</b> CAS No. <code>64-19-7</code> | 영문명 <code>Acetic acid</code> | HSK No. <code>2804</code> | 품명 <code>염소</code>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Filter by scope
-    search_df = db.copy()
-    if search_scope == "수입요령 있는 항목만":
-        search_df = search_df[search_df["수입요령"] != ""]
-    elif search_scope == "CAS 화학물질만":
-        search_df = search_df[search_df["CAS번호"] != ""]
 
-    results = search_database(search_df, query)
+# ===========================================================================
+# PAGE: 법령관리
+# ===========================================================================
+elif menu == "법령관리":
+    st.markdown('<div class="page-title">법령목록</div>', unsafe_allow_html=True)
 
-    if results.empty:
-        st.warning(f"'{query}'에 대한 검색 결과가 없습니다.")
-        return
+    # Get unique laws
+    all_laws = db[db["관련법령"] != ""]["관련법령"].unique().tolist()
+    law_counts = db[db["관련법령"] != ""].groupby("관련법령").size().sort_values(ascending=False)
 
-    # ── Results summary ───────────────────────────────────────────────────
-    st.markdown(f"### 검색 결과: **{len(results):,}건**")
+    st.markdown(f'<div class="count-badge">총 <b>{len(law_counts)}</b> 개 법령</div>', unsafe_allow_html=True)
 
-    # ── Results table (summary view) ──────────────────────────────────────
-    display_cols = ["CAS번호", "영문명", "국문명", "세번", "품명", "관련법령"]
-    summary = results[display_cols].copy()
-    summary = summary.reset_index(drop=True)
+    # Law list as table
+    law_df = law_counts.reset_index()
+    law_df.columns = ["관련법령", "관련 품목 수"]
+    st.dataframe(law_df, use_container_width=True, height=400)
 
-    # Limit display to prevent performance issues
-    MAX_DISPLAY = 200
-    if len(summary) > MAX_DISPLAY:
-        st.info(f"검색 결과가 {len(results):,}건입니다. 상위 {MAX_DISPLAY}건만 표시합니다. 검색어를 더 구체적으로 입력해주세요.")
-        display_results = results.head(MAX_DISPLAY)
-    else:
-        display_results = results
-
-    st.dataframe(
-        display_results[display_cols].reset_index(drop=True),
-        use_container_width=True,
-        height=min(400, 35 * len(display_results) + 38),
-    )
-
-    # ── Detailed cards ────────────────────────────────────────────────────
     st.markdown("---")
-    st.markdown("### 상세 정보")
+    st.markdown('<div class="page-title">법령별 품목 조회</div>', unsafe_allow_html=True)
 
-    # Paginate detailed results
-    CARDS_PER_PAGE = 20
-    total_pages = max(1, (len(display_results) + CARDS_PER_PAGE - 1) // CARDS_PER_PAGE)
+    selected_law = st.selectbox("법령 선택", ["선택하세요..."] + sorted(all_laws))
 
-    if total_pages > 1:
-        page = st.number_input(
-            "페이지", min_value=1, max_value=total_pages,
-            value=1, step=1, format="%d",
+    if selected_law and selected_law != "선택하세요...":
+        law_items = db[db["관련법령"].str.contains(re.escape(selected_law), case=False, na=False)]
+        st.markdown(f'<div class="count-badge">총 <b>{len(law_items):,}</b> 건</div>', unsafe_allow_html=True)
+
+        display_cols = ["CAS번호", "영문명", "세번", "품명"]
+        st.dataframe(
+            law_items[display_cols].reset_index(drop=True),
+            use_container_width=True,
+            height=min(450, 35 * len(law_items) + 38),
         )
+
+
+# ===========================================================================
+# PAGE: 화학물질 조회
+# ===========================================================================
+elif menu == "화학물질 조회":
+    st.markdown('<div class="page-title">화학물질 조회 (팝업)</div>', unsafe_allow_html=True)
+
+    q = st.text_input("CAS No. 또는 물질명으로 검색", placeholder="예: 64-19-7, Acetic acid, 아세트산",
+                       key="chem_search")
+
+    if q:
+        results = search_database(db, q)
+        # Prioritize entries with regulation info
+        if not results.empty:
+            has_reg = results.apply(
+                lambda r: any(str(r.get(k, "")).strip() for k in
+                              ["급성/만성/생태", "사고대비", "제한/금지/허가", "중점", "잔류", "관련법령"]),
+                axis=1,
+            )
+            results = pd.concat([results[has_reg], results[~has_reg]])
+
+        st.markdown(f'<div class="count-badge">총 <b>{len(results):,}</b> 건</div>', unsafe_allow_html=True)
+
+        if results.empty:
+            st.warning("검색 결과가 없습니다.")
+        else:
+            MAX = 100
+            show = results.head(MAX)
+
+            for _, row in show.iterrows():
+                cas = row.get("CAS번호", "")
+                eng = row.get("영문명", "")
+                kor = row.get("국문명", "")
+                hs = row.get("세번", "")
+                product = row.get("품명", "")
+                law = row.get("관련법령", "")
+
+                # Title
+                parts = []
+                if cas: parts.append(f"[{cas}]")
+                if eng: parts.append(eng)
+                if kor: parts.append(f"({kor})")
+                title = " ".join(parts) or product or "항목"
+
+                with st.expander(title, expanded=False):
+                    # Basic info as detail rows
+                    info_html = f"""
+                    <div class="detail-row"><div class="detail-label">CAS No.</div><div class="detail-value">{cas or '-'}</div></div>
+                    <div class="detail-row"><div class="detail-label">영문명</div><div class="detail-value">{eng or '-'}</div></div>
+                    <div class="detail-row"><div class="detail-label">국문명</div><div class="detail-value">{kor or '-'}</div></div>
+                    <div class="detail-row"><div class="detail-label">HSK No.</div><div class="detail-value">{hs or '-'}</div></div>
+                    <div class="detail-row"><div class="detail-label">품명</div><div class="detail-value">{product or '-'}</div></div>
+                    """
+                    st.markdown(info_html, unsafe_allow_html=True)
+
+                    if law:
+                        laws = re.split(r"[,\n]", str(law))
+                        badges = " ".join(f'<span class="law-badge">{l.strip()}</span>' for l in laws if l.strip())
+                        st.markdown(f'<div class="detail-row"><div class="detail-label">관련법령</div><div class="detail-value">{badges}</div></div>', unsafe_allow_html=True)
+
+                    # Regulation tags inline
+                    reg_parts = []
+                    for field, cls in [("급성/만성/생태", "reg-tag-red"), ("사고대비", "reg-tag-orange"),
+                                       ("제한/금지/허가", "reg-tag-red"), ("중점", "reg-tag-purple"),
+                                       ("잔류", "reg-tag-yellow")]:
+                        val = str(row.get(field, "")).strip()
+                        if val:
+                            reg_parts.append(f'<span class="reg-tag {cls}">{field}: {val}</span>')
+                    if reg_parts:
+                        st.markdown(f'<div class="detail-row"><div class="detail-label">규제정보</div><div class="detail-value">{" ".join(reg_parts)}</div></div>', unsafe_allow_html=True)
+
+                    hazard = str(row.get("유해특성분류", "")).strip()
+                    if hazard:
+                        st.markdown(f'<div class="detail-row"><div class="detail-label">유해특성분류</div><div class="detail-value" style="font-size:0.8rem">{hazard}</div></div>', unsafe_allow_html=True)
     else:
-        page = 1
-
-    start_idx = (page - 1) * CARDS_PER_PAGE
-    end_idx = min(start_idx + CARDS_PER_PAGE, len(display_results))
-    page_results = display_results.iloc[start_idx:end_idx]
-
-    if total_pages > 1:
-        st.caption(f"페이지 {page}/{total_pages} (전체 {len(display_results)}건 중 {start_idx+1}-{end_idx}건)")
-
-    for i, (_, row) in enumerate(page_results.iterrows()):
-        cas = row.get("CAS번호", "")
-        eng = row.get("영문명", "")
-        kor = row.get("국문명", "")
-        hs = row.get("세번", "")
-        product = row.get("품명", "")
-        import_req = row.get("수입요령", "")
-        law = row.get("관련법령", "")
-
-        # Card title
-        title_parts = []
-        if cas:
-            title_parts.append(f"[{cas}]")
-        if eng:
-            title_parts.append(eng)
-        if kor:
-            title_parts.append(f"({kor})")
-        if not title_parts and product:
-            title_parts.append(product)
-        title = " ".join(title_parts) if title_parts else f"항목 {start_idx + i + 1}"
-
-        with st.expander(title, expanded=(len(page_results) <= 5)):
-            # Basic info row
-            info_cols = st.columns([1, 1, 1])
-            with info_cols[0]:
-                st.markdown(f"**CAS 번호:** `{cas}`" if cas else "**CAS 번호:** -")
-                st.markdown(f"**영문명:** {eng}" if eng else "**영문명:** -")
-            with info_cols[1]:
-                st.markdown(f"**국문명:** {kor}" if kor else "**국문명:** -")
-                st.markdown(f"**품명:** {product}" if product else "**품명:** -")
-            with info_cols[2]:
-                st.markdown(f"**HS 코드 (세번):** `{hs}`" if hs else "**HS 코드:** -")
-
-            # Related laws - prominently displayed
-            if law:
-                st.markdown("**관련법령:**")
-                st.markdown(render_law_badges(law), unsafe_allow_html=True)
-
-            # Regulation tags
-            reg_html = render_regulation_tags(row)
-            if reg_html:
-                st.markdown("**규제정보:**")
-                st.markdown(reg_html, unsafe_allow_html=True)
-
-            # Hazard classification
-            hazard = row.get("유해특성분류", "")
-            if hazard:
-                st.markdown(f"**유해특성분류 및 혼합물 함량기준:**")
-                st.caption(hazard)
-
-            # Import requirements - full text in scrollable box
-            if import_req:
-                st.markdown("**수입요령:**")
-                st.markdown(
-                    f'<div class="import-req-box">{import_req}</div>',
-                    unsafe_allow_html=True,
-                )
-
-
-if __name__ == "__main__":
-    main()
+        st.markdown("""
+        <div class="detail-card" style="text-align:center; padding:2rem;">
+            <p style="color:#5a6a7a;">CAS No. 또는 물질명을 입력하면 화학물질 정보를 조회할 수 있습니다.</p>
+        </div>
+        """, unsafe_allow_html=True)
