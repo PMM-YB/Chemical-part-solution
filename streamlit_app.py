@@ -18,7 +18,7 @@ st.set_page_config(
     page_title="화학물질 관리시스템",
     page_icon="⚗️",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # ---------------------------------------------------------------------------
@@ -39,6 +39,9 @@ section[data-testid="stSidebar"] {
 }
 section[data-testid="stSidebar"] * { color: #ffffff !important; }
 section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !important; }
+/* Hide sidebar collapse button text */
+button[data-testid="stSidebarCollapseButton"] { display: none !important; }
+[data-testid="collapsedControl"] { display: none !important; }
 
 /* Header */
 .top-header {
