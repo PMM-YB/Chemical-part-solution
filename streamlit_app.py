@@ -328,6 +328,8 @@ def build_master():
             })
 
     master = pd.DataFrame(records).fillna("")
+    # Add HS 4-digit column for search
+    master["HS 4자리"] = master["HS Code"].apply(lambda x: x[:4] if len(str(x)) >= 4 else str(x))
     return master
 
 
@@ -359,44 +361,70 @@ DL_COLS = [
     "관리대상", "중점관리대상", "Exemption", "PM", "SDS", "Registration",
 ]
 
-TABLE_COLS = ["CAS No", "영문명", "국문명", "HS Code", "품명", "관련법령"]
+TABLE_COLS = ["CAS No", "영문명", "국문명", "HS 4자리", "HS Code", "품명", "관련법령"]
+
+
+def _v(row, key):
+    """Get value from row, return '-' if empty."""
+    val = str(row.get(key, "")).strip()
+    return val if val else "-"
 
 
 def render_detail(row):
-    cas = row.get("CAS No", "")
-    eng = row.get("영문명", "")
-    kor = row.get("국문명", "")
-    hs = row.get("HS Code", "")
-    product = row.get("품명", "")
-    law = row.get("관련법령", "")
-    req = row.get("수입요령", "")
+    cas = str(row.get("CAS No", "")).strip()
+    eng = str(row.get("영문명", "")).strip()
+    kor = str(row.get("국문명", "")).strip()
+    hs = str(row.get("HS Code", "")).strip()
+    product = str(row.get("품명", "")).strip()
+    law = str(row.get("관련법령", "")).strip()
+    req = str(row.get("수입요령", "")).strip()
 
-    title = f"[{cas}] {eng}" if cas else (product or hs or "항목")
+    # Build clean title (no special chars)
+    title_parts = []
+    if cas:
+        title_parts.append(f"[{cas}]")
+    if eng:
+        title_parts.append(eng)
     if kor:
-        title += f" ({kor})"
+        title_parts.append(f"({kor})")
+    if not title_parts:
+        title_parts.append(product or hs or "항목")
+    title = " ".join(title_parts)
 
     with st.expander(title, expanded=False):
-        c1, c2 = st.columns(2)
+        # -- 기본정보 --
+        st.markdown('<div class="detail-section-title">기본정보</div>', unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
         with c1:
             st.markdown(f"""
             <div class="detail-row"><div class="detail-label">CAS No.</div><div class="detail-value">{cas or '-'}</div></div>
             <div class="detail-row"><div class="detail-label">영문명</div><div class="detail-value">{eng or '-'}</div></div>
             <div class="detail-row"><div class="detail-label">국문명</div><div class="detail-value">{kor or '-'}</div></div>
-            <div class="detail-row"><div class="detail-label">기존코드</div><div class="detail-value">{row.get('기존코드','') or '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">기존코드</div><div class="detail-value">{_v(row,'기존코드')}</div></div>
+            <div class="detail-row"><div class="detail-label">기존물질여부</div><div class="detail-value">{_v(row,'기존물질여부')}</div></div>
             """, unsafe_allow_html=True)
         with c2:
             st.markdown(f"""
             <div class="detail-row"><div class="detail-label">HS Code</div><div class="detail-value">{hs or '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">HS 4자리</div><div class="detail-value">{hs[:4] if len(hs)>=4 else hs or '-'}</div></div>
             <div class="detail-row"><div class="detail-label">품명</div><div class="detail-value">{product or '-'}</div></div>
-            <div class="detail-row"><div class="detail-label">기존물질여부</div><div class="detail-value">{row.get('기존물질여부','') or '-'}</div></div>
-            <div class="detail-row"><div class="detail-label">Part Number</div><div class="detail-value">{row.get('Part number','') or '-'}</div></div>
+            <div class="detail-row"><div class="detail-label">관련항목</div><div class="detail-value">{_v(row,'관련항목')}</div></div>
+            """, unsafe_allow_html=True)
+        with c3:
+            st.markdown(f"""
+            <div class="detail-row"><div class="detail-label">Part Number</div><div class="detail-value">{_v(row,'Part number')}</div></div>
+            <div class="detail-row"><div class="detail-label">Description</div><div class="detail-value">{_v(row,'Description')}</div></div>
+            <div class="detail-row"><div class="detail-label">PM</div><div class="detail-value">{_v(row,'PM')}</div></div>
+            <div class="detail-row"><div class="detail-label">SDS</div><div class="detail-value">{_v(row,'SDS')}</div></div>
             """, unsafe_allow_html=True)
 
+        # -- 관련법령 --
         if law:
             st.markdown('<div class="detail-section-title">관련법령</div>', unsafe_allow_html=True)
             badges = " ".join(f'<span class="law-badge">{l.strip()}</span>' for l in re.split(r"[/]", law) if l.strip())
             st.markdown(badges, unsafe_allow_html=True)
 
+        # -- 규제물질 정보 --
         reg_items = [
             ("급성/만성/생태", "reg-tag-red"), ("사고대비", "reg-tag-orange"),
             ("제한/금지/허가", "reg-tag-red"), ("중점", "reg-tag-purple"),
@@ -411,11 +439,20 @@ def render_detail(row):
             st.markdown('<div class="detail-section-title">규제물질 정보</div>', unsafe_allow_html=True)
             st.markdown(" ".join(tags), unsafe_allow_html=True)
 
+        # -- 유해특성분류 --
         hazard = str(row.get("유해특성분류", "")).strip()
         if hazard:
             st.markdown('<div class="detail-section-title">유해특성분류 및 혼합물 함량기준</div>', unsafe_allow_html=True)
             st.markdown(f'<div class="import-req-box">{hazard}</div>', unsafe_allow_html=True)
 
+        # -- 신고/등록 현황 --
+        status_items = [("Registration", "등록"), ("SDS", "SDS")]
+        status_vals = [(label, str(row.get(k, "")).strip()) for k, label in status_items if str(row.get(k, "")).strip()]
+        if status_vals:
+            st.markdown('<div class="detail-section-title">신고/등록 현황</div>', unsafe_allow_html=True)
+            st.markdown(" ".join(f'<span class="reg-tag reg-tag-green">{label}: {val}</span>' for label, val in status_vals), unsafe_allow_html=True)
+
+        # -- 수입요령 --
         if req:
             st.markdown('<div class="detail-section-title">수입요령</div>', unsafe_allow_html=True)
             st.markdown(f'<div class="import-req-box">{req}</div>', unsafe_allow_html=True)
@@ -511,12 +548,12 @@ st.markdown(f"""
 tab1, tab2, tab3, tab4 = st.tabs(["📋 HS Code 검색", "🔬 CAS Number 검색", "⚖️ 법률 검색", "🔍 품목명 검색"])
 
 with tab1:
-    st.markdown('<div class="page-title">HS Code 검색</div>', unsafe_allow_html=True)
-    q1 = st.text_input("HS Code 입력", placeholder="예: 2710, 3208, 2909199000", key="q_hs")
+    st.markdown('<div class="page-title">HS Code 검색 (앞 4자리 입력)</div>', unsafe_allow_html=True)
+    q1 = st.text_input("HS Code 입력 (앞 4자리)", placeholder="예: 2710, 3208, 2909", key="q_hs")
     if q1:
-        show_results(search_df(master, q1, ["HS Code"]), "hs")
+        show_results(search_df(master, q1, ["HS Code", "HS 4자리"]), "hs")
     else:
-        st.info("HS Code를 입력하면 해당 코드의 모든 화학물질 · 법령 · 수입요령이 표시됩니다.")
+        st.info("HS Code 앞 4자리를 입력하면 해당 코드의 모든 화학물질 · 법령 · 수입요령이 표시됩니다.")
 
 with tab2:
     st.markdown('<div class="page-title">CAS Number 검색</div>', unsafe_allow_html=True)
