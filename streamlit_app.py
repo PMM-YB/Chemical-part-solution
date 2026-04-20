@@ -19,7 +19,9 @@ st.set_page_config(page_title="화학물질 관리시스템", page_icon="⚗️"
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
 * { font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif !important; }
+.material-symbols-rounded { font-family: 'Material Symbols Rounded' !important; font-size: 20px !important; }
 .block-container { padding-top: 0rem !important; }
 header[data-testid="stHeader"] { background: transparent !important; height: 2rem !important; }
 .stApp { background-color: #f4f6f9; }
