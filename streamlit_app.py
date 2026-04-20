@@ -67,6 +67,13 @@ section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !impo
 .stDownloadButton > button { background:#1a8754 !important; color:#fff !important; border:none !important; border-radius:6px !important; font-weight:600 !important; }
 .stTabs [data-baseweb="tab"] { background:#e8ecf1; border-radius:8px 8px 0 0; padding:0.5rem 1.5rem; font-weight:600; color:#002060; }
 .stTabs [aria-selected="true"] { background:#002060 !important; color:#fff !important; }
+/* Hide material icon text in expanders (arrow_right bug) */
+.streamlit-expanderHeader span[data-testid="stMarkdownContainer"] .material-symbols-rounded,
+[data-testid="stExpander"] summary span.material-symbols-rounded,
+[data-testid="stExpander"] details summary svg + span { font-size: 0 !important; }
+/* Force hide any arrow_right / keyboard_double text artifacts */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="collapsedControl"] { display: none !important; visibility: hidden !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -300,19 +307,18 @@ def build_master():
                 "Registration": kr["Registration"] if kr is not None else "",
             })
 
-    # ── 3. Add HS-only entries (no CAS) ──
-    matched_hs = set(r["HS Code"] for r in records if r["HS Code"])
-    for code, rows in hs_by_code.items():
-        if code not in matched_hs:
-            r = rows[0]
+    # ── 3. Add HS-only entries (ALL unmatched HS rows, not deduplicated) ──
+    matched_hs_codes = set(r["HS Code"] for r in records if r["HS Code"])
+    for _, r in hs_df.iterrows():
+        code = r["세번"]
+        if code and code not in matched_hs_codes:
+            law = r["관련법령"]
             all_laws = set()
-            for hr in rows:
-                law = hr["관련법령"]
-                if law:
-                    for l in re.split(r"[/,\n]", law):
-                        l = l.strip()
-                        if l:
-                            all_laws.add(l)
+            if law:
+                for l in re.split(r"[/,\n]", law):
+                    l = l.strip()
+                    if l:
+                        all_laws.add(l)
             records.append({
                 "CAS No": "", "영문명": "", "국문명": "",
                 "HS Code": code, "품명": r["품명"],
@@ -379,12 +385,12 @@ def render_detail(row):
     law = str(row.get("관련법령", "")).strip()
     req = str(row.get("수입요령", "")).strip()
 
-    # Build clean title (no special chars)
+    # Build clean title — avoid [] which Streamlit renders as material icons
     title_parts = []
     if cas:
-        title_parts.append(f"[{cas}]")
+        title_parts.append(cas)
     if eng:
-        title_parts.append(eng)
+        title_parts.append(f"- {eng}")
     if kor:
         title_parts.append(f"({kor})")
     if not title_parts:
@@ -527,17 +533,18 @@ except Exception as e:
     st.error(f"데이터 로딩 오류: {e}")
     st.stop()
 
-has_cas = master[master["CAS No"] != ""]
+cas_total = load_cas()
+hs_total = load_hs()
 has_hs = master[master["HS Code"] != ""]
 has_law = master[master["관련법령"] != ""]
 has_both = master[(master["CAS No"] != "") & (master["HS Code"] != "")]
+cas_hs_match_count = has_both["HS Code"].nunique()
 
 st.markdown(f"""
 <div class="stats-row">
-    <div class="stat-box"><p class="num">{len(master):,}</p><p class="lbl">전체 레코드</p></div>
-    <div class="stat-box"><p class="num">{has_cas["CAS No"].nunique():,}</p><p class="lbl">CAS 물질</p></div>
-    <div class="stat-box"><p class="num">{has_hs["HS Code"].nunique():,}</p><p class="lbl">HS 코드</p></div>
-    <div class="stat-box"><p class="num">{len(has_both):,}</p><p class="lbl">CAS-HS 매칭</p></div>
+    <div class="stat-box"><p class="num">{len(cas_total):,}</p><p class="lbl">CAS 물질 (전체)</p></div>
+    <div class="stat-box"><p class="num">{len(has_hs):,}</p><p class="lbl">HS 코드</p></div>
+    <div class="stat-box"><p class="num">{cas_hs_match_count:,}</p><p class="lbl">CAS-HS 매칭</p></div>
     <div class="stat-box"><p class="num">{len(has_law):,}</p><p class="lbl">법령 매칭</p></div>
 </div>
 """, unsafe_allow_html=True)
