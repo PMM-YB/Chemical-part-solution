@@ -5,7 +5,6 @@ Star Truck Korea — All 47K CAS + 16K HS fully matched
 """
 
 import streamlit as st
-import streamlit.components.v1 as _components
 import pandas as pd
 import re
 import io
@@ -70,25 +69,6 @@ section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !impo
 .stDownloadButton > button { background:#1a8754 !important; color:#fff !important; border:none !important; border-radius:6px !important; font-weight:600 !important; }
 .stTabs [data-baseweb="tab"] { background:#e8ecf1; border-radius:8px 8px 0 0; padding:0.5rem 1.5rem; font-weight:600; color:#002060; }
 .stTabs [aria-selected="true"] { background:#002060 !important; color:#fff !important; }
-/* Hide arrow_right icon text — target every possible selector */
-p[data-testid="stExpanderToggleIcon"],
-span[data-testid="stExpanderToggleIcon"],
-div[data-testid="stExpanderToggleIcon"],
-[data-testid="stExpanderToggleIcon"] {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    font-size: 0 !important;
-    line-height: 0 !important;
-    width: 0 !important;
-    height: 0 !important;
-    max-width: 0 !important;
-    max-height: 0 !important;
-    overflow: hidden !important;
-    position: absolute !important;
-    pointer-events: none !important;
-    color: transparent !important;
-}
 /* Force hide sidebar collapse button */
 [data-testid="stSidebarCollapseButton"],
 [data-testid="collapsedControl"] { display: none !important; visibility: hidden !important; }
@@ -400,130 +380,100 @@ def _row_html(label, value):
 
 
 def render_detail(row):
-    cas = str(row.get("CAS No", "")).strip()
-    eng = str(row.get("영문명", "")).strip()
-    kor = str(row.get("국문명", "")).strip()
-    hs = str(row.get("HS Code", "")).strip()
-    product = str(row.get("품명", "")).strip()
-    law = str(row.get("관련법령", "")).strip()
-    req = str(row.get("수입요령", "")).strip()
+    def g(key):
+        return str(row.get(key, "")).strip()
+
+    def rh(label, value):
+        v = str(value).strip() if value else ""
+        return (f'<div class="detail-row">'
+                f'<div class="detail-label">{label}</div>'
+                f'<div class="detail-value">{v or "-"}</div></div>')
+
+    cas = g("CAS No"); eng = g("영문명"); kor = g("국문명")
+    hs = g("HS Code"); product = g("품명"); law = g("관련법령"); req = g("수입요령")
 
     title_parts = []
-    if cas:
-        title_parts.append(cas)
-    if eng:
-        title_parts.append(f"- {eng}")
-    if kor:
-        title_parts.append(f"({kor})")
-    if not title_parts:
-        title_parts.append(product or hs or "항목")
+    if cas: title_parts.append(cas)
+    if eng: title_parts.append(f"- {eng}")
+    if kor: title_parts.append(f"({kor})")
+    if not title_parts: title_parts.append(product or hs or "항목")
     title = " ".join(title_parts)
-    with st.expander(title, expanded=False):
-        # -- 기본정보 --
-        st.markdown('<div class="detail-section-title">기본정보</div>', unsafe_allow_html=True)
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.markdown(
-                _row_html("CAS No.", cas) +
-                _row_html("영문명", eng) +
-                _row_html("국문명", kor) +
-                _row_html("기존코드", _v(row, "기존코드")) +
-                _row_html("기존물질여부", _v(row, "기존물질여부")) +
-                _row_html("Check DTK CAS", _v(row, "Check DTK CAS")),
-                unsafe_allow_html=True)
-        with c2:
-            st.markdown(
-                _row_html("HS Code", hs) +
-                _row_html("HS 4자리", hs[:4] if len(hs) >= 4 else hs) +
-                _row_html("품명", product) +
-                _row_html("관련항목", _v(row, "관련항목")) +
-                _row_html("Demand", _v(row, "Demand")),
-                unsafe_allow_html=True)
-        with c3:
-            st.markdown(
-                _row_html("Part Number", _v(row, "Part number")) +
-                _row_html("Description", _v(row, "Description")) +
-                _row_html("min / max", f"{_v(row,'min')} ~ {_v(row,'max')} %") +
-                _row_html("Weight (kg)", _v(row, "Weight (kg)")) +
-                _row_html("Inside weight", _v(row, "Inside weight")) +
-                _row_html("New material", _v(row, "New material")),
-                unsafe_allow_html=True)
 
-        # -- 관련법령 --
-        if law:
-            st.markdown('<div class="detail-section-title">관련법령</div>', unsafe_allow_html=True)
-            badges = " ".join(f'<span class="law-badge">{l.strip()}</span>' for l in re.split(r"[/]", law) if l.strip())
-            st.markdown(badges, unsafe_allow_html=True)
+    # 기본정보 — 3-column grid
+    col1 = (rh("CAS No.", cas) + rh("영문명", eng) + rh("국문명", kor) +
+            rh("기존코드", g("기존코드")) + rh("기존물질여부", g("기존물질여부")) +
+            rh("Check DTK CAS", g("Check DTK CAS")))
+    col2 = (rh("HS Code", hs) + rh("HS 4자리", hs[:4] if len(hs) >= 4 else hs) +
+            rh("품명", product) + rh("관련항목", g("관련항목")) + rh("Demand", g("Demand")))
+    col3 = (rh("Part Number", g("Part number")) + rh("Description", g("Description")) +
+            rh("min / max", f"{g('min')} ~ {g('max')} %") +
+            rh("Weight (kg)", g("Weight (kg)")) + rh("Inside weight", g("Inside weight")) +
+            rh("New material", g("New material")))
+    basic = (f'<div class="detail-section-title">기본정보</div>'
+             f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">'
+             f'<div>{col1}</div><div>{col2}</div><div>{col3}</div></div>')
 
-        # -- K-REACH 규제현황 --
-        kr_status = [
-            ("PM", "reg-tag-blue"), ("Subjected PM", "reg-tag-blue"),
-            ("Toxic", "reg-tag-red"), ("Restriction", "reg-tag-red"),
-            ("Prohibition", "reg-tag-red"), ("Accident", "reg-tag-orange"),
-            ("관리대상", "reg-tag-purple"), ("중점관리대상", "reg-tag-purple"),
-            ("기존 살생물질", "reg-tag-purple"), ("암 돌연변이성", "reg-tag-red"),
-            ("Exemption", "reg-tag-green"), ("Delivery prohibition", "reg-tag-red"),
-        ]
-        # 화평법/CAS 규제
-        cas_status = [
-            ("급성/만성/생태", "reg-tag-red"), ("사고대비", "reg-tag-orange"),
-            ("제한/금지/허가", "reg-tag-red"), ("중점", "reg-tag-purple"),
-            ("잔류", "reg-tag-yellow"),
-        ]
-        all_tags = []
-        for f, cls in cas_status + kr_status:
-            val = str(row.get(f, "")).strip()
-            if val and val.lower() not in ("", "-", "n/a", "na"):
-                all_tags.append(f'<span class="reg-tag {cls}">{f}: {val}</span>')
-        if all_tags:
-            st.markdown('<div class="detail-section-title">규제물질 현황</div>', unsafe_allow_html=True)
-            st.markdown(" ".join(all_tags), unsafe_allow_html=True)
+    # 관련법령
+    law_html = ""
+    if law:
+        badges = " ".join(f'<span class="law-badge">{l.strip()}</span>'
+                          for l in re.split(r"[/]", law) if l.strip())
+        law_html = f'<div class="detail-section-title">관련법령</div><div>{badges}</div>'
 
-        # -- K-REACH 등록/신고 현황 --
-        st.markdown('<div class="detail-section-title">K-REACH 등록 / 신고 현황</div>', unsafe_allow_html=True)
-        r1, r2 = st.columns(2)
-        with r1:
-            st.markdown(
-                _row_html("LoC", _v(row, "LoC")) +
-                _row_html("SDS", _v(row, "SDS")) +
-                _row_html("Application date / No.", _v(row, "Application date / No.")) +
-                _row_html("check", _v(row, "check")) +
-                _row_html("Confirm", _v(row, "Confirm")),
-                unsafe_allow_html=True)
-        with r2:
-            st.markdown(
-                _row_html("Report", _v(row, "Report")) +
-                _row_html("Registration", _v(row, "Registration")) +
-                _row_html("Declaration", _v(row, "Declaration")) +
-                _row_html("Safety & Label", _v(row, "Safety&Label")) +
-                _row_html("Pre-registration", _v(row, "Pre-registration")),
-                unsafe_allow_html=True)
+    # 규제현황 태그
+    cas_status = [("급성/만성/생태","reg-tag-red"),("사고대비","reg-tag-orange"),
+                  ("제한/금지/허가","reg-tag-red"),("중점","reg-tag-purple"),("잔류","reg-tag-yellow")]
+    kr_status  = [("PM","reg-tag-blue"),("Subjected PM","reg-tag-blue"),
+                  ("Toxic","reg-tag-red"),("Restriction","reg-tag-red"),
+                  ("Prohibition","reg-tag-red"),("Accident","reg-tag-orange"),
+                  ("관리대상","reg-tag-purple"),("중점관리대상","reg-tag-purple"),
+                  ("기존 살생물질","reg-tag-purple"),("암 돌연변이성","reg-tag-red"),
+                  ("Exemption","reg-tag-green"),("Delivery prohibition","reg-tag-red")]
+    tags = [f'<span class="reg-tag {cls}">{f}: {g(f)}</span>'
+            for f, cls in cas_status + kr_status
+            if g(f) and g(f).lower() not in ("-","n/a","na")]
+    reg_html = ""
+    if tags:
+        reg_html = f'<div class="detail-section-title">규제물질 현황</div><div>{" ".join(tags)}</div>'
 
-        # -- 기타 --
-        remarks = str(row.get("remarks", "")).strip()
-        remark2 = str(row.get("Remark", "")).strip()
-        oox = str(row.get("O or X", "")).strip()
-        contact = str(row.get("Contact point", "")).strip()
-        misc = (
-            _row_html("O or X", oox) +
-            _row_html("remarks", remarks) +
-            _row_html("Remark", remark2) +
-            _row_html("Contact point", contact)
-        )
-        if any([oox, remarks, remark2, contact]):
-            st.markdown('<div class="detail-section-title">기타</div>', unsafe_allow_html=True)
-            st.markdown(misc, unsafe_allow_html=True)
+    # K-REACH 등록/신고 현황 — 2-column grid
+    kr1 = (rh("LoC", g("LoC")) + rh("SDS", g("SDS")) +
+           rh("Application date / No.", g("Application date / No.")) +
+           rh("check", g("check")) + rh("Confirm", g("Confirm")))
+    kr2 = (rh("Report", g("Report")) + rh("Registration", g("Registration")) +
+           rh("Declaration", g("Declaration")) + rh("Safety & Label", g("Safety&Label")) +
+           rh("Pre-registration", g("Pre-registration")))
+    kreach_html = (f'<div class="detail-section-title">K-REACH 등록 / 신고 현황</div>'
+                   f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">'
+                   f'<div>{kr1}</div><div>{kr2}</div></div>')
 
-        # -- 유해특성분류 --
-        hazard = str(row.get("유해특성분류", "")).strip()
-        if hazard:
-            st.markdown('<div class="detail-section-title">유해특성분류 및 혼합물 함량기준</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="import-req-box">{hazard}</div>', unsafe_allow_html=True)
+    # 기타
+    misc_html = ""
+    oox = g("O or X"); remarks = g("remarks"); remark2 = g("Remark"); contact = g("Contact point")
+    if any([oox, remarks, remark2, contact]):
+        misc_html = (f'<div class="detail-section-title">기타</div>' +
+                     rh("O or X", oox) + rh("remarks", remarks) +
+                     rh("Remark", remark2) + rh("Contact point", contact))
 
-        # -- 수입요령 --
-        if req:
-            st.markdown('<div class="detail-section-title">수입요령</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="import-req-box">{req}</div>', unsafe_allow_html=True)
+    # 유해특성분류
+    hazard = g("유해특성분류")
+    hazard_html = (f'<div class="detail-section-title">유해특성분류 및 혼합물 함량기준</div>'
+                   f'<div class="import-req-box">{hazard}</div>') if hazard else ""
+
+    # 수입요령
+    req_html = (f'<div class="detail-section-title">수입요령</div>'
+                f'<div class="import-req-box">{req}</div>') if req else ""
+
+    html = f"""<details style="border:1px solid #dde3ea;border-radius:8px;margin-bottom:0.5rem;background:#fff;overflow:hidden;">
+<summary style="list-style:none;cursor:pointer;font-weight:600;color:#002060;padding:0.75rem 1rem;background:#f8f9fb;border-bottom:1px solid #eef0f3;font-size:0.9rem;display:flex;align-items:center;gap:0.5rem;">
+<span style="font-size:0.75rem;color:#aaa;" class="_arr">▶</span>{title}
+</summary>
+<div style="padding:1rem;">{basic}{law_html}{reg_html}{kreach_html}{misc_html}{hazard_html}{req_html}</div>
+</details>
+<style>details[open] summary ._arr{{transform:rotate(90deg);display:inline-block;}}
+details summary::-webkit-details-marker{{display:none;}}
+details summary::marker{{display:none;}}</style>"""
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def show_results(results, key):
@@ -615,9 +565,29 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
-# 4 Tabs
+# Load K-REACH raw sheets (for viewer tab)
 # ---------------------------------------------------------------------------
-tab1, tab2, tab3, tab4 = st.tabs(["🔬 CAS Number 검색", "📋 HS Code 검색", "⚖️ 법률 검색", "🔍 품목명 검색"])
+@st.cache_data(show_spinner="K-REACH 전체 시트 로딩 중...")
+def load_kreach_raw():
+    fp = DATA_DIR / KREACH_FILE
+    result = {}
+    for sheet in ["HS", "Component", "Part list", "Registration", "Demend", "data protection"]:
+        try:
+            if sheet in ("Registration", "data protection"):
+                df = pd.read_excel(fp, sheet_name=sheet, dtype=str, header=None).fillna("")
+            else:
+                df = pd.read_excel(fp, sheet_name=sheet, dtype=str).fillna("")
+                df.columns = [str(c) for c in df.columns]
+            result[sheet] = df
+        except Exception as ex:
+            result[sheet] = str(ex)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# 5 Tabs
+# ---------------------------------------------------------------------------
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🔬 CAS Number 검색", "📋 HS Code 검색", "⚖️ 법률 검색", "🔍 품목명 검색", "📑 K-REACH 원본"])
 
 with tab1:
     st.markdown('<div class="page-title">CAS Number 검색</div>', unsafe_allow_html=True)
@@ -666,3 +636,51 @@ with tab4:
         show_results(search_df(master, q4, ["영문명", "국문명", "품명", "Description", "관련항목"]), "name")
     else:
         st.info("영문 또는 한글 품목명을 입력하면 관련 화학물질 정보가 표시됩니다.")
+
+with tab5:
+    st.markdown('<div class="page-title">K-REACH 원본 데이터 (시트별 조회)</div>', unsafe_allow_html=True)
+    kreach_raw = load_kreach_raw()
+
+    SHEET_LABELS = {
+        "HS":              "📋 HS",
+        "Component":       "🔬 Component",
+        "Part list":       "📄 Part list",
+        "Registration":    "📝 Registration",
+        "Demend":          "📊 Demend",
+        "data protection": "🔒 Data Protection",
+    }
+    sheet_names = list(SHEET_LABELS.keys())
+    kr_tabs = st.tabs([SHEET_LABELS[s] for s in sheet_names])
+
+    for sheet_name, kr_tab in zip(sheet_names, kr_tabs):
+        with kr_tab:
+            data = kreach_raw.get(sheet_name)
+            if isinstance(data, str):
+                st.error(f"로딩 오류: {data}")
+                continue
+            if data is None or data.empty:
+                st.info("데이터가 없습니다.")
+                continue
+
+            sq = st.text_input("🔍 검색어", key=f"krsq_{sheet_name}",
+                               placeholder="검색어를 입력하면 해당 행만 필터됩니다")
+            if sq:
+                mask = data.apply(
+                    lambda col: col.astype(str).str.contains(sq, case=False, na=False)
+                ).any(axis=1)
+                disp = data[mask].reset_index(drop=True)
+            else:
+                disp = data.reset_index(drop=True)
+
+            st.caption(f"총 **{len(disp):,}행** × {len(disp.columns)}열"
+                       + (f"  (전체 {len(data):,}건 중 필터됨)" if sq else ""))
+            st.dataframe(disp, use_container_width=True, height=520)
+
+            avail_dl = [c for c in disp.columns]
+            dl_bytes = disp[avail_dl].to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+            st.download_button(
+                f"📥 {sheet_name} 다운로드 (CSV)",
+                data=dl_bytes,
+                file_name=f"KREACH_{sheet_name}.csv",
+                key=f"krdl_{sheet_name}",
+            )
