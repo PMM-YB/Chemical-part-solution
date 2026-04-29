@@ -69,14 +69,21 @@ section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !impo
 .stDownloadButton > button { background:#1a8754 !important; color:#fff !important; border:none !important; border-radius:6px !important; font-weight:600 !important; }
 .stTabs [data-baseweb="tab"] { background:#e8ecf1; border-radius:8px 8px 0 0; padding:0.5rem 1.5rem; font-weight:600; color:#002060; }
 .stTabs [aria-selected="true"] { background:#002060 !important; color:#fff !important; }
-/* Hide arrow_right material icon in expanders */
+/* Hide arrow_right material icon in expanders — catch all Streamlit versions */
+[data-testid="stExpanderToggleIcon"] {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    font-size: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+}
 [data-testid="stExpander"] summary span.material-symbols-rounded,
-[data-testid="stExpander"] summary span[data-testid="stExpanderToggleIcon"],
+[data-testid="stExpander"] summary p[class*="material"],
+[data-testid="stExpander"] summary span[class*="material"],
 [data-testid="stExpander"] details summary svg,
-[data-testid="stExpander"] details summary svg + span,
-[data-testid="stExpander"] details summary > div:first-child,
-.streamlit-expanderHeader .material-symbols-rounded,
-details[data-testid="stExpander"] summary > span:first-child {
+.streamlit-expanderHeader .material-symbols-rounded {
     display: none !important;
     font-size: 0 !important;
     width: 0 !important;
