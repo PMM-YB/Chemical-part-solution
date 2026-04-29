@@ -70,21 +70,24 @@ section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !impo
 .stDownloadButton > button { background:#1a8754 !important; color:#fff !important; border:none !important; border-radius:6px !important; font-weight:600 !important; }
 .stTabs [data-baseweb="tab"] { background:#e8ecf1; border-radius:8px 8px 0 0; padding:0.5rem 1.5rem; font-weight:600; color:#002060; }
 .stTabs [aria-selected="true"] { background:#002060 !important; color:#fff !important; }
-/* Hide arrow_right text in expanders — all Streamlit versions */
-[data-testid="stExpanderToggleIcon"],
-div[data-testid="stExpander"] details summary > p,
-div[data-testid="stExpander"] details summary > p:first-child,
-div[data-testid="stExpander"] details summary span.material-symbols-rounded,
-div[data-testid="stExpander"] details summary > span:first-of-type:not(:last-child),
-div[data-testid="stExpander"] details > summary > svg,
-.streamlit-expanderHeader span.material-symbols-rounded {
+/* Hide arrow_right icon text — target every possible selector */
+p[data-testid="stExpanderToggleIcon"],
+span[data-testid="stExpanderToggleIcon"],
+div[data-testid="stExpanderToggleIcon"],
+[data-testid="stExpanderToggleIcon"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
     font-size: 0 !important;
+    line-height: 0 !important;
     width: 0 !important;
     height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
     overflow: hidden !important;
     position: absolute !important;
-    visibility: hidden !important;
+    pointer-events: none !important;
+    color: transparent !important;
 }
 /* Force hide sidebar collapse button */
 [data-testid="stSidebarCollapseButton"],
@@ -551,32 +554,6 @@ def show_results(results, key):
 
     st.markdown("---")
     st.markdown('<div class="page-title">상세 정보</div>', unsafe_allow_html=True)
-
-    # JS: MutationObserver로 arrow_right 텍스트 노드를 실시간 제거
-    _components.html("""
-    <script>
-    (function() {
-        function hide() {
-            try {
-                var doc = window.parent.document;
-                doc.querySelectorAll('[data-testid="stExpanderToggleIcon"]').forEach(function(el){
-                    el.style.setProperty('display','none','important');
-                });
-                doc.querySelectorAll('div[data-testid="stExpander"] details summary > p').forEach(function(el){
-                    el.style.setProperty('display','none','important');
-                });
-            } catch(e){}
-        }
-        hide();
-        try {
-            new MutationObserver(hide).observe(
-                window.parent.document.body, {subtree:true, childList:true}
-            );
-        } catch(e){}
-    })();
-    </script>
-    """, height=0)
-
     PER = 15
     pages = max(1, (len(show) + PER - 1) // PER)
     pg = 1
