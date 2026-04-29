@@ -5,6 +5,7 @@ Star Truck Korea — All 47K CAS + 16K HS fully matched
 """
 
 import streamlit as st
+import streamlit.components.v1 as _components
 import pandas as pd
 import re
 import io
@@ -69,25 +70,21 @@ section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !impo
 .stDownloadButton > button { background:#1a8754 !important; color:#fff !important; border:none !important; border-radius:6px !important; font-weight:600 !important; }
 .stTabs [data-baseweb="tab"] { background:#e8ecf1; border-radius:8px 8px 0 0; padding:0.5rem 1.5rem; font-weight:600; color:#002060; }
 .stTabs [aria-selected="true"] { background:#002060 !important; color:#fff !important; }
-/* Hide arrow_right material icon in expanders — catch all Streamlit versions */
-[data-testid="stExpanderToggleIcon"] {
+/* Hide arrow_right text in expanders — all Streamlit versions */
+[data-testid="stExpanderToggleIcon"],
+div[data-testid="stExpander"] details summary > p,
+div[data-testid="stExpander"] details summary > p:first-child,
+div[data-testid="stExpander"] details summary span.material-symbols-rounded,
+div[data-testid="stExpander"] details summary > span:first-of-type:not(:last-child),
+div[data-testid="stExpander"] details > summary > svg,
+.streamlit-expanderHeader span.material-symbols-rounded {
     display: none !important;
-    visibility: hidden !important;
+    font-size: 0 !important;
     width: 0 !important;
     height: 0 !important;
-    font-size: 0 !important;
     overflow: hidden !important;
     position: absolute !important;
-}
-[data-testid="stExpander"] summary span.material-symbols-rounded,
-[data-testid="stExpander"] summary p[class*="material"],
-[data-testid="stExpander"] summary span[class*="material"],
-[data-testid="stExpander"] details summary svg,
-.streamlit-expanderHeader .material-symbols-rounded {
-    display: none !important;
-    font-size: 0 !important;
-    width: 0 !important;
-    overflow: hidden !important;
+    visibility: hidden !important;
 }
 /* Force hide sidebar collapse button */
 [data-testid="stSidebarCollapseButton"],
@@ -418,7 +415,6 @@ def render_detail(row):
     if not title_parts:
         title_parts.append(product or hs or "항목")
     title = " ".join(title_parts)
-
     with st.expander(title, expanded=False):
         # -- 기본정보 --
         st.markdown('<div class="detail-section-title">기본정보</div>', unsafe_allow_html=True)
@@ -555,6 +551,32 @@ def show_results(results, key):
 
     st.markdown("---")
     st.markdown('<div class="page-title">상세 정보</div>', unsafe_allow_html=True)
+
+    # JS: MutationObserver로 arrow_right 텍스트 노드를 실시간 제거
+    _components.html("""
+    <script>
+    (function() {
+        function hide() {
+            try {
+                var doc = window.parent.document;
+                doc.querySelectorAll('[data-testid="stExpanderToggleIcon"]').forEach(function(el){
+                    el.style.setProperty('display','none','important');
+                });
+                doc.querySelectorAll('div[data-testid="stExpander"] details summary > p').forEach(function(el){
+                    el.style.setProperty('display','none','important');
+                });
+            } catch(e){}
+        }
+        hide();
+        try {
+            new MutationObserver(hide).observe(
+                window.parent.document.body, {subtree:true, childList:true}
+            );
+        } catch(e){}
+    })();
+    </script>
+    """, height=0)
+
     PER = 15
     pages = max(1, (len(show) + PER - 1) // PER)
     pg = 1
