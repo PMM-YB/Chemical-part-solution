@@ -220,8 +220,57 @@ def build_master():
         # Get K-REACH info if available
         kr = kr_cas.get(cas, None)
 
+        def _kr(key):
+            return kr[key] if kr is not None else ""
+
+        base_cas = {
+            "급성/만성/생태": cas_row["급성/만성/생태"],
+            "사고대비": cas_row["사고대비"],
+            "제한/금지/허가": cas_row["제한/금지/허가"],
+            "중점": cas_row["중점"],
+            "잔류": cas_row["잔류"],
+            "유해특성분류": cas_row["유해특성분류"],
+            "기존물질여부": cas_row["기존물질여부"],
+            "기존코드": cas_row["기존"],
+        }
+        kr_fields = {
+            "Part number": _kr("Part number"),
+            "Description": _kr("Description"),
+            "Check DTK CAS": _kr("Check DTK CAS"),
+            "min": _kr("min"), "max": _kr("max"),
+            "Weight (kg)": _kr("Weight (kg)"),
+            "Demand": _kr("Demand"),
+            "Inside weight": _kr("Inside weight"),
+            "New material": _kr("New material"),
+            "PM": _kr("PM"),
+            "Subjected PM": _kr("Subjected PM"),
+            "Toxic": _kr("Toxic"),
+            "Restriction": _kr("Restriction"),
+            "Prohibition": _kr("Prohibition"),
+            "Accident": _kr("Accident"),
+            "관리대상": _kr("관리대상"),
+            "중점관리대상": _kr("중점관리대상"),
+            "기존 살생물질": _kr("기존 살생물질"),
+            "암 돌연변이성": _kr("암 돌연변이성"),
+            "Exemption": _kr("Exemption"),
+            "Delivery prohibition": _kr("Delivery prohibition"),
+            "LoC": _kr("LoC"),
+            "SDS": _kr("SDS"),
+            "Application date / No.": _kr("Application date / No."),
+            "check": _kr("check"),
+            "Confirm": _kr("Confirm"),
+            "Report": _kr("Report"),
+            "Registration": _kr("Registration"),
+            "Declaration": _kr("Declaration"),
+            "Safety&Label": _kr("Safety&Label"),
+            "Pre-registration": _kr("Pre-registration"),
+            "O or X": _kr("O or X"),
+            "remarks": _kr("remarks"),
+            "Remark": _kr("Remark"),
+            "Contact point": _kr("Contact point"),
+        }
+
         if hs_matches:
-            # Use first match for primary info, combine laws
             hs_row = hs_matches[0]
             all_laws = set()
             for hr in hs_matches:
@@ -233,79 +282,43 @@ def build_master():
                             all_laws.add(l)
             hs_code = hs_row["세번"]
             hs4 = hs_code[:4] if len(hs_code) >= 4 else hs_code
-            # Also add K-REACH laws
             kr_l = kr_law.get(hs4, "")
             if kr_l:
                 for l in re.split(r"[/,]", kr_l):
                     l = l.strip()
                     if l:
                         all_laws.add(l)
-
             records.append({
-                "CAS No": cas,
-                "영문명": eng,
-                "국문명": kor,
-                "HS Code": hs_code,
-                "품명": hs_row["품명"],
+                "CAS No": cas, "영문명": eng, "국문명": kor,
+                "HS Code": hs_code, "품명": hs_row["품명"],
                 "관련항목": kr_item.get(hs4, ""),
                 "관련법령": " / ".join(sorted(all_laws)),
                 "수입요령": hs_row["수입요령"],
-                "급성/만성/생태": cas_row["급성/만성/생태"],
-                "사고대비": cas_row["사고대비"],
-                "제한/금지/허가": cas_row["제한/금지/허가"],
-                "중점": cas_row["중점"],
-                "잔류": cas_row["잔류"],
-                "유해특성분류": cas_row["유해특성분류"],
-                "기존물질여부": cas_row["기존물질여부"],
-                "기존코드": cas_row["기존"],
-                # K-REACH fields
-                "Part number": kr["Part number"] if kr is not None else "",
-                "Description": kr["Description"] if kr is not None else "",
-                "Toxic": kr["Toxic"] if kr is not None else "",
-                "Restriction": kr["Restriction"] if kr is not None else "",
-                "Prohibition": kr["Prohibition"] if kr is not None else "",
-                "Accident": kr["Accident"] if kr is not None else "",
-                "관리대상": kr["관리대상"] if kr is not None else "",
-                "중점관리대상": kr["중점관리대상"] if kr is not None else "",
-                "Exemption": kr["Exemption"] if kr is not None else "",
-                "PM": kr["PM"] if kr is not None else "",
-                "SDS": kr["SDS"] if kr is not None else "",
-                "Registration": kr["Registration"] if kr is not None else "",
+                **base_cas, **kr_fields,
             })
         else:
-            # No HS match
             records.append({
-                "CAS No": cas,
-                "영문명": eng,
-                "국문명": kor,
-                "HS Code": "",
-                "품명": "",
-                "관련항목": "",
-                "관련법령": "",
-                "수입요령": "",
-                "급성/만성/생태": cas_row["급성/만성/생태"],
-                "사고대비": cas_row["사고대비"],
-                "제한/금지/허가": cas_row["제한/금지/허가"],
-                "중점": cas_row["중점"],
-                "잔류": cas_row["잔류"],
-                "유해특성분류": cas_row["유해특성분류"],
-                "기존물질여부": cas_row["기존물질여부"],
-                "기존코드": cas_row["기존"],
-                "Part number": kr["Part number"] if kr is not None else "",
-                "Description": kr["Description"] if kr is not None else "",
-                "Toxic": kr["Toxic"] if kr is not None else "",
-                "Restriction": kr["Restriction"] if kr is not None else "",
-                "Prohibition": kr["Prohibition"] if kr is not None else "",
-                "Accident": kr["Accident"] if kr is not None else "",
-                "관리대상": kr["관리대상"] if kr is not None else "",
-                "중점관리대상": kr["중점관리대상"] if kr is not None else "",
-                "Exemption": kr["Exemption"] if kr is not None else "",
-                "PM": kr["PM"] if kr is not None else "",
-                "SDS": kr["SDS"] if kr is not None else "",
-                "Registration": kr["Registration"] if kr is not None else "",
+                "CAS No": cas, "영문명": eng, "국문명": kor,
+                "HS Code": "", "품명": "", "관련항목": "",
+                "관련법령": "", "수입요령": "",
+                **base_cas, **kr_fields,
             })
 
     # ── 3. Add HS-only entries (ALL unmatched HS rows, not deduplicated) ──
+    _empty_kr = {k: "" for k in [
+        "Part number", "Description", "Check DTK CAS", "min", "max",
+        "Weight (kg)", "Demand", "Inside weight", "New material",
+        "PM", "Subjected PM", "Toxic", "Restriction", "Prohibition", "Accident",
+        "관리대상", "중점관리대상", "기존 살생물질", "암 돌연변이성",
+        "Exemption", "Delivery prohibition", "LoC", "SDS",
+        "Application date / No.", "check", "Confirm", "Report",
+        "Registration", "Declaration", "Safety&Label", "Pre-registration",
+        "O or X", "remarks", "Remark", "Contact point",
+    ]}
+    _empty_cas = {k: "" for k in [
+        "급성/만성/생태", "사고대비", "제한/금지/허가", "중점", "잔류",
+        "유해특성분류", "기존물질여부", "기존코드",
+    ]}
     matched_hs_codes = set(r["HS Code"] for r in records if r["HS Code"])
     for _, r in hs_df.iterrows():
         code = r["세번"]
@@ -323,12 +336,7 @@ def build_master():
                 "관련항목": "",
                 "관련법령": " / ".join(sorted(all_laws)),
                 "수입요령": r["수입요령"],
-                "급성/만성/생태": "", "사고대비": "", "제한/금지/허가": "",
-                "중점": "", "잔류": "", "유해특성분류": "", "기존물질여부": "", "기존코드": "",
-                "Part number": "", "Description": "",
-                "Toxic": "", "Restriction": "", "Prohibition": "", "Accident": "",
-                "관리대상": "", "중점관리대상": "", "Exemption": "",
-                "PM": "", "SDS": "", "Registration": "",
+                **_empty_cas, **_empty_kr,
             })
 
     master = pd.DataFrame(records).fillna("")
@@ -359,13 +367,31 @@ def to_excel(df):
 
 
 DL_COLS = [
-    "CAS No", "영문명", "국문명", "기존코드", "HS Code", "품명", "관련항목", "관련법령",
-    "급성/만성/생태", "사고대비", "제한/금지/허가", "중점", "잔류", "유해특성분류", "기존물질여부",
-    "Part number", "Description", "Toxic", "Restriction", "Prohibition", "Accident",
-    "관리대상", "중점관리대상", "Exemption", "PM", "SDS", "Registration",
+    # 기본 정보
+    "CAS No", "영문명", "국문명", "기존코드", "기존물질여부", "Check DTK CAS",
+    # HS / 법령
+    "HS Code", "HS 4자리", "품명", "관련항목", "관련법령", "수입요령",
+    # 화평법 규제
+    "급성/만성/생태", "사고대비", "제한/금지/허가", "중점", "잔류", "유해특성분류",
+    # K-REACH 물질 정보
+    "Part number", "Description", "min", "max", "Weight (kg)", "Demand",
+    "Inside weight", "New material",
+    # K-REACH 규제
+    "PM", "Subjected PM", "Toxic", "Restriction", "Prohibition", "Accident",
+    "관리대상", "중점관리대상", "기존 살생물질", "암 돌연변이성",
+    "Exemption", "Delivery prohibition",
+    # K-REACH 등록/신고
+    "LoC", "SDS", "Application date / No.", "check", "Confirm",
+    "Report", "Registration", "Declaration", "Safety&Label", "Pre-registration",
+    # 기타
+    "O or X", "remarks", "Remark", "Contact point",
 ]
 
-TABLE_COLS = ["CAS No", "영문명", "국문명", "HS 4자리", "HS Code", "품명", "관련법령"]
+TABLE_COLS = [
+    "CAS No", "영문명", "국문명", "기존코드", "HS 4자리", "HS Code", "품명",
+    "관련법령", "급성/만성/생태", "사고대비", "제한/금지/허가", "중점", "잔류",
+    "유해특성분류", "Part number", "Description", "Registration",
+]
 
 
 def _v(row, key):
@@ -499,8 +525,12 @@ def show_results(results, key):
         st.info(f"상위 {MAX}건만 표시합니다.")
 
     avail_t = [c for c in TABLE_COLS if c in show.columns]
-    st.dataframe(show[avail_t].reset_index(drop=True), use_container_width=True,
-                 height=min(450, 35 * len(show) + 38))
+    st.dataframe(
+        show[avail_t].reset_index(drop=True),
+        use_container_width=True,
+        height=min(450, 35 * len(show) + 38),
+        column_config={c: st.column_config.TextColumn(c, width="medium") for c in avail_t},
+    )
 
     st.markdown("---")
     st.markdown('<div class="page-title">상세 정보</div>', unsafe_allow_html=True)
