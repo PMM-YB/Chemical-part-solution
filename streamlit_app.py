@@ -455,10 +455,10 @@ def render_detail(row):
                      rh("O or X", oox) + rh("remarks", remarks) +
                      rh("Remark", remark2) + rh("Contact point", contact))
 
-    # 유해특성분류
+    # 유해특성분류 — 항상 표시
     hazard = g("유해특성분류")
-    hazard_html = (f'<div class="detail-section-title">유해특성분류 및 혼합물 함량기준</div>'
-                   f'<div class="import-req-box">{hazard}</div>') if hazard else ""
+    hazard_html = (f'<div class="detail-section-title">유해특성분류 및 혼합물 함량기준(%)</div>'
+                   f'<div class="import-req-box">{hazard if hazard else "-"}</div>')
 
     # 수입요령
     req_html = (f'<div class="detail-section-title">수입요령</div>'
