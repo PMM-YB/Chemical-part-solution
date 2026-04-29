@@ -564,14 +564,14 @@ def show_results(results, key):
 # ---------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("""
-    <div style="text-align:center; padding:1rem 0 0.5rem 0;">
-        <div style="font-size:1.8rem;">⚗️</div>
-        <div style="font-size:1rem; font-weight:700;">화학물질 관리시스템</div>
-        <div style="font-size:0.65rem; color:#8cb4ff; margin-top:0.2rem;">Chemical Substance Management</div>
+    <div style="text-align:center; padding:1.2rem 0 0.8rem 0;">
+        <div style="font-size:3rem; line-height:1.2;">⚗️</div>
+        <div style="font-size:1.25rem; font-weight:800; margin-top:0.4rem;">화학물질 관리시스템</div>
+        <div style="font-size:0.85rem; color:#8cb4ff; margin-top:0.3rem;">Chemical Substance Management</div>
     </div>
     """, unsafe_allow_html=True)
     st.markdown("---")
-    st.caption("Star Truck Korea")
+    st.markdown('<div style="text-align:center; font-size:1rem; font-weight:600; color:#fff;">Star Truck Korea</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # Header + Load
