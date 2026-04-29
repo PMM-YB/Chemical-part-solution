@@ -79,7 +79,7 @@ section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !impo
 # Data
 # ---------------------------------------------------------------------------
 DATA_DIR = Path(__file__).parent
-CAS_FILE = "cas_data.xlsx"
+CAS_FILE = "화학물질_20260429.xlsx"
 HS_FILE = "(수정) [별표2] 수입요령.xlsx"
 KREACH_FILE = "K-REACH list in DTK.xlsx"
 
