@@ -62,7 +62,10 @@ section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !impo
 .import-req-box { background:#f8f9fb; border:1px solid #dde3ea; border-radius:8px; padding:0.8rem; font-size:0.82rem; line-height:1.7; white-space:pre-wrap; max-height:250px; overflow-y:auto; }
 [data-testid="stDataFrame"] div[role="columnheader"],
 [data-testid="stDataFrame"] div[role="columnheader"] *,
-[data-testid="stDataFrame"] th { background:#002060 !important; color:#fff !important; font-weight:700 !important; font-size:0.8rem !important; }
+[data-testid="stDataFrame"] th { background:#002060 !important; color:#fff !important; font-weight:700 !important; font-size:0.8rem !important; text-align:center !important; justify-content:center !important; }
+[data-testid="stDataFrame"] div[role="gridcell"],
+[data-testid="stDataFrame"] td { text-align:center !important; justify-content:center !important; align-items:center !important; }
+[data-testid="stDataFrame"] div[role="gridcell"] > * { text-align:center !important; width:100% !important; }
 [data-testid="stTextInput"] > div > div > input { font-size:0.95rem !important; padding:0.6rem 1rem !important; border-radius:8px !important; border:2px solid #002060 !important; }
 [data-testid="stTextInput"] > div > div > input:focus { border-color:#0066cc !important; }
 .stButton > button { background:#002060 !important; color:#fff !important; border:none !important; border-radius:6px !important; font-weight:600 !important; }
