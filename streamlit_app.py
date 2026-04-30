@@ -538,7 +538,7 @@ def show_results(results, key):
     st.dataframe(
         show[avail_t].reset_index(drop=True),
         use_container_width=True,
-        height=min(450, 35 * len(show) + 38),
+        height=35 * len(show) + 38,
         column_config={c: st.column_config.TextColumn(c, width="medium") for c in avail_t},
     )
 
