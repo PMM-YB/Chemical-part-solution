@@ -11,7 +11,7 @@ import io
 from pathlib import Path
 from rapidfuzz import fuzz, process
 
-st.set_page_config(page_title="화학물질 관리시스템", page_icon="⚗️", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="화학물질 관리시스템", page_icon="⚗️", layout="wide", initial_sidebar_state="expanded")
 
 # ---------------------------------------------------------------------------
 # CSS
