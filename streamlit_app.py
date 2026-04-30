@@ -241,6 +241,7 @@ def build_master():
             "Description": _kr("Description"),
             "Check DTK CAS": _kr("Check DTK CAS"),
             "min": _kr("min"), "max": _kr("max"),
+            "%": _kr("%"),
             "Weight (kg)": _kr("Weight (kg)"),
             "Demand": _kr("Demand"),
             "Inside weight": _kr("Inside weight"),
@@ -400,7 +401,16 @@ DL_COLS = [
 TABLE_COLS = [
     "CAS No", "영문명", "국문명", "기존코드", "HS 4자리", "HS Code", "품명",
     "관련법령", "급성/만성/생태", "사고대비", "제한/금지/허가", "중점", "잔류",
-    "유해특성분류", "Part number", "Description", "Registration",
+    "유해특성분류",
+    "Part number", "Description", "Check DTK CAS",
+    "min", "max", "%", "Weight (kg)", "Demand",
+    "Inside weight", "New material", "PM", "Subjected PM",
+    "Toxic", "Restriction", "Prohibition", "Accident",
+    "관리대상", "중점관리대상", "기존 살생물질", "암 돌연변이성",
+    "Exemption", "Delivery prohibition", "LoC", "SDS",
+    "Application date / No.", "check", "Confirm", "Report",
+    "Registration", "Declaration", "Safety&Label", "Pre-registration",
+    "remarks", "O or X", "Remark", "Contact point",
 ]
 
 
