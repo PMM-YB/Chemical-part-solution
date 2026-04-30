@@ -385,7 +385,7 @@ DL_COLS = [
     # 화평법 규제
     "급성/만성/생태", "사고대비", "제한/금지/허가", "중점", "잔류", "유해특성분류",
     # K-REACH 물질 정보
-    "Part number", "Description", "min", "max", "Weight (kg)", "Demand",
+    "Part number", "Description", "min", "max", "%", "Weight (kg)", "Demand",
     "Inside weight", "New material",
     # K-REACH 규제
     "PM", "Subjected PM", "Toxic", "Restriction", "Prohibition", "Accident",
@@ -613,6 +613,47 @@ st.markdown(f"""
     <div class="stat-box"><p class="num">{len(has_law):,}</p><p class="lbl">법령 매칭</p></div>
 </div>
 """, unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# Sidebar: 전체 매칭 데이터 (depends on `master`, so rendered after build_master)
+# ---------------------------------------------------------------------------
+with st.sidebar:
+    st.markdown("---")
+    st.markdown(
+        f'<div style="text-align:center; padding:0.4rem 0;">'
+        f'<div style="font-size:0.8rem; font-weight:600; color:#fff;">전체 매칭 데이터</div>'
+        f'<div style="font-size:1.6rem; font-weight:800; color:#8cb4ff; margin-top:0.2rem;">'
+        f'{len(master):,}<span style="font-size:0.75rem; font-weight:600; margin-left:0.2rem;">건</span></div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+    if st.button("📊 전체 데이터 보기", use_container_width=True, key="sb_show_all"):
+        st.session_state["show_all_data"] = not st.session_state.get("show_all_data", False)
+
+    _avail_dl_all = [c for c in DL_COLS if c in master.columns]
+    st.download_button(
+        "📥 엑셀 다운로드",
+        data=to_excel(master[_avail_dl_all]),
+        file_name="chemical_master_all.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="sb_dl_all",
+        use_container_width=True,
+    )
+
+# Render full master inline when toggled
+if st.session_state.get("show_all_data", False):
+    st.markdown('<div class="page-title">📊 전체 매칭 데이터</div>', unsafe_allow_html=True)
+    st.caption(f"총 {len(master):,} 건 — 표는 스크롤로 탐색, 전체 다운로드는 사이드바의 엑셀 버튼 사용")
+    _avail_t_all = [c for c in TABLE_COLS if c in master.columns]
+    st.dataframe(
+        master[_avail_t_all].reset_index(drop=True),
+        use_container_width=True,
+        height=600,
+    )
+    if st.button("닫기", key="close_all_data"):
+        st.session_state["show_all_data"] = False
+        st.rerun()
+    st.markdown("---")
 
 # ---------------------------------------------------------------------------
 # Load K-REACH raw sheets (for viewer tab)
