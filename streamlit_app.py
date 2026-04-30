@@ -605,8 +605,7 @@ cas_total = load_cas()
 hs_total = load_hs()
 has_hs = master[master["HS Code"] != ""]
 has_law = master[master["관련법령"] != ""]
-has_both = master[(master["CAS No"] != "") & (master["HS Code"] != "")]
-cas_hs_match_count = len(has_both)
+cas_hs_match_count = len(has_hs)
 
 st.markdown(f"""
 <div class="stats-row">
